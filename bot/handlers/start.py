@@ -96,10 +96,10 @@ async def cmd_help(message: types.Message):
         "<b>Как отправить тренировку:</b>\n"
         "1️⃣ Сделай фото с тренировки\n"
         "2️⃣ В подписи укажи:\n"
-        "<code>#dayX #kmX #tX</code>\n"
+        "<code>#kmX #minX</code>\n"
         "3️⃣ Отправь в воскресенье\n\n"
         "<b>Пример:</b>\n"
-        "<code>#day1 #km10 #t45</code>\n\n"
+        "<code>#km10 #min45</code>\n\n"
         "❓ Вопросы? Пиши @Stroitelev_Fedor",
         parse_mode="HTML"
     )
