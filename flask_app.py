@@ -1,7 +1,7 @@
 import os
 import asyncio
 import logging
-from flask import Flask, request, abort, send_from_directory  # ← ДОБАВЬ send_from_directory
+from flask import Flask, request, abort, send_from_directory
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode
@@ -24,21 +24,26 @@ dp.middleware.setup(LoggingMiddleware())
 # Flask приложение
 app = Flask(__name__)
 
+# Абсолютный путь к папке webapp
+WEBAPP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webapp')
+
 
 @app.route('/')
 def index():
     return "🤖 Letski Bot is running!"
 
 
-# ========== МАРШРУТ ДЛЯ WEB APP ==========
 @app.route('/webapp')
 def serve_webapp():
-    return send_from_directory('webapp', 'index.html')
+    logger.info(f"Serving webapp from: {WEBAPP_DIR}")
+    if not os.path.exists(os.path.join(WEBAPP_DIR, 'index.html')):
+        return f"❌ index.html не найден в {WEBAPP_DIR}", 404
+    return send_from_directory(WEBAPP_DIR, 'index.html')
 
 
 @app.route('/webapp/<path:filename>')
 def serve_webapp_static(filename):
-    return send_from_directory('webapp', filename)
+    return send_from_directory(WEBAPP_DIR, filename)
 
 
 @app.route('/set_webhook', methods=['GET', 'POST'])
