@@ -1,7 +1,7 @@
 import os
 import asyncio
 import logging
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory  # ← ДОБАВЬ send_from_directory
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode
@@ -24,13 +24,21 @@ dp.middleware.setup(LoggingMiddleware())
 # Flask приложение
 app = Flask(__name__)
 
-@app.route('/webapp')
-def serve_webapp():
-    return app.send_static_file('index.html')
 
 @app.route('/')
 def index():
     return "🤖 Letski Bot is running!"
+
+
+# ========== МАРШРУТ ДЛЯ WEB APP ==========
+@app.route('/webapp')
+def serve_webapp():
+    return send_from_directory('webapp', 'index.html')
+
+
+@app.route('/webapp/<path:filename>')
+def serve_webapp_static(filename):
+    return send_from_directory('webapp', filename)
 
 
 @app.route('/set_webhook', methods=['GET', 'POST'])
@@ -47,16 +55,6 @@ def set_webhook():
     
     asyncio.run(_set())
     return f"✅ Webhook установлен на {webhook_url}"
-
-
-@app.route('/delete_webhook', methods=['GET'])
-def delete_webhook():
-    async def _delete():
-        await telegram_bot.delete_webhook()
-        logger.info("Webhook deleted")
-    
-    asyncio.run(_delete())
-    return "✅ Webhook удален"
 
 
 @app.route(WEBHOOK_PATH, methods=['POST'])
