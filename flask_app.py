@@ -5,17 +5,16 @@ from flask import Flask, request, abort
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode
-from aiogram.utils.executor import start_webhook
 
-from config import BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_HOST, MAIN_CHAT_ID
+from config import BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_HOST
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Инициализация бота и диспетчера
-bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
-dp = Dispatcher(bot)
+telegram_bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+dp = Dispatcher(telegram_bot)
 dp.middleware.setup(LoggingMiddleware())
 
 # Flask приложение
@@ -35,8 +34,8 @@ def set_webhook():
     webhook_url = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
     
     async def _set():
-        await bot.delete_webhook()
-        await bot.set_webhook(webhook_url)
+        await telegram_bot.delete_webhook()
+        await telegram_bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to {webhook_url}")
     
     asyncio.run(_set())
@@ -46,7 +45,7 @@ def set_webhook():
 @app.route('/delete_webhook', methods=['GET'])
 def delete_webhook():
     async def _delete():
-        await bot.delete_webhook()
+        await telegram_bot.delete_webhook()
         logger.info("Webhook deleted")
     
     asyncio.run(_delete())
@@ -68,7 +67,7 @@ def telegram_webhook():
     return 'OK'
 
 
-# Импортируем хендлеры (должны быть после создания dp)
+# Импортируем хендлеры (должны быть после создания dp и telegram_bot)
 import bot.handlers.start
 import bot.handlers.workout
 import bot.handlers.rating
