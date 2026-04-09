@@ -1,27 +1,24 @@
-from aiogram import Router, types, Bot
-from aiogram.filters import Command, CommandObject
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import date, timedelta
+from aiogram import types, Bot
+from aiogram.dispatcher.filters import Command
+from datetime import date
 
+from flask_app import dp, bot
 from config import ADMIN_IDS, MAIN_CHAT_ID
 from bot.utils.supabase import (
-    get_all_coaches, get_sunday_schedule, 
+    get_all_coaches, get_sunday_schedule,
     create_sunday_schedule, update_sunday_coach,
     get_upcoming_sundays_without_coach, get_rating_by_km
 )
-from bot.utils.helpers import get_next_sunday, is_sunday
-
-router = Router()
+from bot.utils.helpers import get_next_sunday
+from bot.keyboards.inline import get_coaches_keyboard
 
 
 def is_admin(user_id: int) -> bool:
-    """Проверка на админа"""
     return user_id in ADMIN_IDS
 
 
-@router.message(Command("admin"))
+@dp.message_handler(Command("admin"))
 async def cmd_admin(message: types.Message):
-    """Админ-панель"""
     if not is_admin(message.from_user.id):
         await message.answer("❌ У тебя нет доступа к админ-панели")
         return
@@ -40,9 +37,8 @@ async def cmd_admin(message: types.Message):
     )
 
 
-@router.message(Command("coaches"))
+@dp.message_handler(Command("coaches"))
 async def cmd_coaches(message: types.Message):
-    """Список тренеров"""
     if not is_admin(message.from_user.id):
         return
     
@@ -61,76 +57,58 @@ async def cmd_coaches(message: types.Message):
     await message.answer(text, parse_mode="HTML")
 
 
-@router.message(Command("set_coach"))
-async def cmd_set_coach(message: types.Message, command: CommandObject):
-    """Назначить тренера на дату: /set_coach 2026-04-13"""
+@dp.message_handler(Command("set_coach"))
+async def cmd_set_coach(message: types.Message):
     if not is_admin(message.from_user.id):
         return
     
-    args = command.args
+    args = message.get_args()
     if not args:
         await message.answer("❌ Укажи дату: /set_coach YYYY-MM-DD")
         return
     
     sunday_date = args.strip()
     
-    # Проверяем формат даты
     try:
         date.fromisoformat(sunday_date)
     except ValueError:
         await message.answer("❌ Неверный формат даты. Используй YYYY-MM-DD")
         return
     
-    # Получаем список тренеров
     coaches = await get_all_coaches()
     
     if not coaches:
         await message.answer("❌ Нет тренеров в базе")
         return
     
-    # Создаем клавиатуру выбора тренера
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(
-                text=coach['full_name'],
-                callback_data=f"admin_set_coach:{sunday_date}:{coach['id']}"
-            )] for coach in coaches
-        ] + [[InlineKeyboardButton(text="❌ Отмена", callback_data="admin_cancel")]]
-    )
-    
     await message.answer(
         f"👟 Выбери тренера на {sunday_date}:",
-        reply_markup=keyboard
+        reply_markup=get_coaches_keyboard(coaches, sunday_date)
     )
 
 
-@router.callback_query(lambda c: c.data.startswith("admin_set_coach:"))
+@dp.callback_query_handler(lambda c: c.data.startswith("set_coach:"))
 async def process_set_coach(callback: types.CallbackQuery):
-    """Обработка выбора тренера"""
     if not is_admin(callback.from_user.id):
         await callback.answer("Нет доступа")
         return
     
     _, sunday_date, coach_id = callback.data.split(":")
     
-    # Проверяем, есть ли уже расписание
     schedule = await get_sunday_schedule(sunday_date)
     
     if not schedule:
-        # Создаем новое расписание
         await create_sunday_schedule(sunday_date=sunday_date, coach_id=coach_id)
         await callback.message.edit_text(f"✅ Создано расписание на {sunday_date} с тренером")
     else:
-        # Обновляем существующее
         await update_sunday_coach(sunday_date, coach_id)
         await callback.message.edit_text(f"✅ Тренер на {sunday_date} обновлен")
     
     await callback.answer()
 
 
-@router.message(Command("next_sunday"))
+@dp.message_handler(Command("next_sunday"))
 async def cmd_next_sunday(message: types.Message):
-    """Информация о следующем воскресенье"""
     if not is_admin(message.from_user.id):
         return
     
@@ -156,9 +134,8 @@ async def cmd_next_sunday(message: types.Message):
     )
 
 
-@router.message(Command("check_coaches"))
+@dp.message_handler(Command("check_coaches"))
 async def cmd_check_coaches(message: types.Message):
-    """Проверить будущие тренировки без тренера"""
     if not is_admin(message.from_user.id):
         return
     
@@ -177,13 +154,12 @@ async def cmd_check_coaches(message: types.Message):
     await message.answer(text, parse_mode="HTML")
 
 
-@router.message(Command("add_schedule"))
-async def cmd_add_schedule(message: types.Message, command: CommandObject):
-    """Создать расписание: /add_schedule 2026-04-13"""
+@dp.message_handler(Command("add_schedule"))
+async def cmd_add_schedule(message: types.Message):
     if not is_admin(message.from_user.id):
         return
     
-    args = command.args
+    args = message.get_args()
     if not args:
         await message.answer("❌ Укажи дату: /add_schedule YYYY-MM-DD")
         return
@@ -207,18 +183,14 @@ async def cmd_add_schedule(message: types.Message, command: CommandObject):
         await message.answer("❌ Ошибка при создании расписания")
 
 
-@router.message(Command("broadcast"))
-async def cmd_broadcast(message: types.Message, bot: Bot):
-    """Рассылка сообщения (ответ на сообщение)"""
+@dp.message_handler(Command("broadcast"))
+async def cmd_broadcast(message: types.Message):
     if not is_admin(message.from_user.id):
         return
     
     if not message.reply_to_message:
         await message.answer("❌ Ответь на сообщение, которое хочешь разослать")
         return
-    
-    # Здесь нужно получить всех пользователей и разослать
-    # Пока просто отправляем в общий чат
     
     try:
         await bot.copy_message(
@@ -231,9 +203,8 @@ async def cmd_broadcast(message: types.Message, bot: Bot):
         await message.answer(f"❌ Ошибка: {e}")
 
 
-@router.message(Command("top10"))
+@dp.message_handler(Command("top10"))
 async def cmd_top10(message: types.Message):
-    """Топ-10 по километражу"""
     if not is_admin(message.from_user.id):
         return
     
@@ -250,10 +221,3 @@ async def cmd_top10(message: types.Message):
         text += f"   📏 {user['total_km']} км | 🔥 {user['sunday_streak']} серия\n\n"
     
     await message.answer(text, parse_mode="HTML")
-
-
-@router.callback_query(lambda c: c.data == "admin_cancel")
-async def admin_cancel(callback: types.CallbackQuery):
-    """Отмена админского действия"""
-    await callback.message.edit_text("❌ Действие отменено")
-    await callback.answer()
