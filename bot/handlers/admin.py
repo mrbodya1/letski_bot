@@ -2,7 +2,7 @@ from aiogram import types, Bot
 from aiogram.dispatcher.filters import Command
 from datetime import date
 
-from flask_app import dp, bot
+from flask_app import dp, telegram_bot
 from config import ADMIN_IDS, MAIN_CHAT_ID
 from bot.utils.supabase import (
     get_all_coaches, get_sunday_schedule,
