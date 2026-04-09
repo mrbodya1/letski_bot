@@ -26,7 +26,7 @@ def index():
     return "🤖 Letski Bot is running!"
 
 
-@app.route('/set_webhook', methods=['GET'])
+@app.route('/set_webhook', methods=['GET', 'POST'])
 def set_webhook():
     if not WEBHOOK_HOST:
         return "❌ WEBHOOK_HOST не задан"
@@ -67,7 +67,7 @@ def telegram_webhook():
     return 'OK'
 
 
-# Импортируем хендлеры (должны быть после создания dp и telegram_bot)
+# Импортируем хендлеры
 import bot.handlers.start
 import bot.handlers.workout
 import bot.handlers.rating
