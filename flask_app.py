@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Инициализация бота и диспетчера
 telegram_bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+Bot.set_current(telegram_bot)
 dp = Dispatcher(telegram_bot)
 dp.middleware.setup(LoggingMiddleware())
 
