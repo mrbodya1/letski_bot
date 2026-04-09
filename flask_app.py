@@ -1,13 +1,13 @@
+import os
 import asyncio
 import logging
 from flask import Flask, request, abort
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode
-from aiogram.utils import executor
+from aiogram.utils.executor import start_webhook
 
-from config import BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_HOST
-from bot.handlers import start, workout, rating, admin
+from config import BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_HOST, MAIN_CHAT_ID
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -20,12 +20,6 @@ dp.middleware.setup(LoggingMiddleware())
 
 # Flask приложение
 app = Flask(__name__)
-
-
-@app.route('/')
-def index():
-    """Главная страница"""
-    return "🤖 Letski Bot is running!"
 
 
 @app.route('/')
@@ -51,9 +45,8 @@ def set_webhook():
 
 @app.route('/delete_webhook', methods=['GET'])
 def delete_webhook():
-    """Удаление вебхука"""
     async def _delete():
-        await bot.delete_webhook(drop_pending_updates=True)
+        await bot.delete_webhook()
         logger.info("Webhook deleted")
     
     asyncio.run(_delete())
@@ -75,18 +68,12 @@ def telegram_webhook():
     return 'OK'
 
 
-@app.route('/webapp')
-def webapp():
-    """Мини-приложение (заглушка, потом отдадим HTML)"""
-    return "Web App будет здесь"
+# Импортируем хендлеры (должны быть после создания dp)
+import bot.handlers.start
+import bot.handlers.workout
+import bot.handlers.rating
+import bot.handlers.admin
 
 
-# Для локального тестирования
 if __name__ == '__main__':
-    # Импортируем хендлеры здесь, чтобы они зарегистрировались
-    import bot.handlers.start
-    import bot.handlers.workout
-    import bot.handlers.rating
-    import bot.handlers.admin
-    
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
