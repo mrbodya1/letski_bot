@@ -24,6 +24,9 @@ dp.middleware.setup(LoggingMiddleware())
 # Flask приложение
 app = Flask(__name__)
 
+@app.route('/webapp')
+def serve_webapp():
+    return app.send_static_file('index.html')
 
 @app.route('/')
 def index():
