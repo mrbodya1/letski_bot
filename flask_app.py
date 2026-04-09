@@ -5,6 +5,7 @@ from flask import Flask, request, abort
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ParseMode
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from config import BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_HOST
 
@@ -12,10 +13,11 @@ from config import BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_HOST
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Инициализация бота и диспетчера
+# Инициализация хранилища и бота
+storage = MemoryStorage()
 telegram_bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
 Bot.set_current(telegram_bot)
-dp = Dispatcher(telegram_bot)
+dp = Dispatcher(telegram_bot, storage=storage)
 Dispatcher.set_current(dp)
 dp.middleware.setup(LoggingMiddleware())
 
