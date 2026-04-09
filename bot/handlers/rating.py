@@ -1,32 +1,30 @@
-from aiogram import Router, types, Bot
-from aiogram.filters import Command
+from aiogram import types, Bot
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
+from flask_app import dp, bot
 from config import ADMIN_IDS
 from bot.utils.supabase import (
-    get_profile, get_workout_by_id, get_coach, 
+    get_profile, get_workout_by_id, get_coach,
     create_rating, has_rating_for_workout
 )
-from bot.keyboards.inline import get_rating_stars
+from bot.keyboards.inline import get_rating_stars, get_rating_keyboard
 
-router = Router()
 
-# Временное хранилище оценок (в продакшене лучше использовать Redis или FSM)
+# Временное хранилище оценок
 temp_ratings = {}
 
 
-@router.callback_query(lambda c: c.data.startswith("rate_start:"))
+@dp.callback_query_handler(lambda c: c.data.startswith("rate_start:"))
 async def start_rating(callback: types.CallbackQuery):
-    """Начало оценки тренера"""
     workout_id = callback.data.split(":")[1]
     
-    # Проверяем, нет ли уже оценки
     has_rating = await has_rating_for_workout(workout_id)
     if has_rating:
         await callback.answer("Ты уже оценил эту тренировку!", show_alert=True)
         await callback.message.delete()
         return
     
-    # Инициализируем временные оценки
     user_id = callback.from_user.id
     temp_ratings[user_id] = {
         "workout_id": workout_id,
@@ -45,9 +43,8 @@ async def start_rating(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("rate_pro:"))
+@dp.callback_query_handler(lambda c: c.data.startswith("rate_pro:"))
 async def rate_pro(callback: types.CallbackQuery):
-    """Оценка профессионализма"""
     _, workout_id, value = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -67,9 +64,8 @@ async def rate_pro(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("rate_presentation:"))
+@dp.callback_query_handler(lambda c: c.data.startswith("rate_presentation:"))
 async def rate_presentation(callback: types.CallbackQuery):
-    """Оценка подачи"""
     _, workout_id, value = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -89,9 +85,8 @@ async def rate_presentation(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("rate_friendly:"))
+@dp.callback_query_handler(lambda c: c.data.startswith("rate_friendly:"))
 async def rate_friendly(callback: types.CallbackQuery):
-    """Оценка дружелюбности"""
     _, workout_id, value = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -100,8 +95,6 @@ async def rate_friendly(callback: types.CallbackQuery):
         return
     
     temp_ratings[user_id]["friendly"] = int(value)
-    
-    # Все оценки собраны, показываем итог
     ratings = temp_ratings[user_id]
     
     await callback.message.edit_text(
@@ -110,15 +103,14 @@ async def rate_friendly(callback: types.CallbackQuery):
         f"Подача: {'★' * ratings['presentation']}{'☆' * (5 - ratings['presentation'])}\n"
         f"Дружелюбность: {'★' * ratings['friendly']}{'☆' * (5 - ratings['friendly'])}\n\n"
         f"Всё верно?",
-        reply_markup=get_rating_stars("confirm", workout_id, 5),  # 5 означает "подтверждено"
+        reply_markup=get_rating_stars("confirm", workout_id, 5),
         parse_mode="HTML"
     )
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("rate_confirm:"))
-async def confirm_rating(callback: types.CallbackQuery, bot: Bot):
-    """Подтверждение и сохранение оценки"""
+@dp.callback_query_handler(lambda c: c.data.startswith("rate_confirm:"))
+async def confirm_rating(callback: types.CallbackQuery):
     workout_id = callback.data.split(":")[1]
     user_id = callback.from_user.id
     
@@ -132,7 +124,6 @@ async def confirm_rating(callback: types.CallbackQuery, bot: Bot):
         await callback.answer("Заполни все оценки!", show_alert=True)
         return
     
-    # Получаем данные о тренировке
     workout = await get_workout_by_id(workout_id)
     if not workout:
         await callback.answer("Тренировка не найдена", show_alert=True)
@@ -140,7 +131,6 @@ async def confirm_rating(callback: types.CallbackQuery, bot: Bot):
     
     profile = await get_profile(user_id)
     
-    # Сохраняем оценку
     rating = await create_rating(
         workout_id=workout_id,
         user_id=profile["id"],
@@ -151,10 +141,8 @@ async def confirm_rating(callback: types.CallbackQuery, bot: Bot):
     )
     
     if rating:
-        # Получаем данные тренера
         coach = await get_coach(workout["coach_id"])
         
-        # Уведомление админам
         for admin_id in ADMIN_IDS:
             try:
                 await bot.send_message(
@@ -172,12 +160,10 @@ async def confirm_rating(callback: types.CallbackQuery, bot: Bot):
                 pass
         
         await callback.message.edit_text(
-            "✅ <b>Спасибо за оценку!</b>\n\n"
-            "Твое мнение очень важно для нас! 🙏",
+            "✅ <b>Спасибо за оценку!</b>\n\nТвое мнение очень важно для нас! 🙏",
             parse_mode="HTML"
         )
         
-        # Очищаем временные данные
         del temp_ratings[user_id]
     else:
         await callback.answer("Ошибка при сохранении", show_alert=True)
@@ -185,9 +171,8 @@ async def confirm_rating(callback: types.CallbackQuery, bot: Bot):
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data == "rate_cancel")
+@dp.callback_query_handler(lambda c: c.data == "rate_cancel")
 async def cancel_rating(callback: types.CallbackQuery):
-    """Отмена оценки"""
     user_id = callback.from_user.id
     if user_id in temp_ratings:
         del temp_ratings[user_id]
