@@ -2,7 +2,7 @@ from aiogram import types, Bot
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-from flask_app import dp, bot
+from flask_app import dp, telegram_bot
 from config import ADMIN_IDS
 from bot.utils.supabase import (
     get_profile, get_workout_by_id, get_coach,
