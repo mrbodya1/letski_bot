@@ -3,7 +3,7 @@ from datetime import datetime, date
 from aiogram import types, Bot
 from aiogram.dispatcher.filters import Command
 
-from flask_app import dp, bot
+from flask_app import dp, telegram_bot
 from config import MAIN_CHAT_ID, SUNDAY_WEEKDAY, STREAK_BADGES
 from bot.utils.supabase import (
     get_profile, get_sunday_schedule, create_workout,
