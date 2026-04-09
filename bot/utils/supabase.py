@@ -1,6 +1,10 @@
+import os
+import random
+from datetime import date
 from supabase import create_client, Client
 from config import SUPABASE_URL, SUPABASE_KEY
 
+# Инициализация клиента Supabase
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
@@ -23,16 +27,11 @@ async def create_profile(telegram_id: int, username: str, full_name: str, gender
     return result.data[0] if result.data else None
 
 
-async def update_profile_streak(telegram_id: int, streak: int):
-    """Обновить серию пользователя (триггер в БД сделает это автоматически, но оставим для ручного)"""
-    supabase.table("profiles").update({"sunday_streak": streak}).eq("telegram_id", telegram_id).execute()
-
-
 # ========== ТРЕНЕРЫ ==========
 async def get_all_coaches():
     """Получить список всех тренеров"""
     result = supabase.table("coaches").select("*").order("full_name").execute()
-    return result.data
+    return result.data if result.data else []
 
 
 async def get_coach(coach_id: str):
@@ -48,12 +47,6 @@ async def get_sunday_schedule(sunday_date: str):
     return result.data[0] if result.data else None
 
 
-async def update_sunday_coach(sunday_date: str, coach_id: str):
-    """Обновить тренера на воскресенье"""
-    result = supabase.table("sunday_schedule").update({"coach_id": coach_id}).eq("sunday_date", sunday_date).execute()
-    return result.data[0] if result.data else None
-
-
 async def create_sunday_schedule(sunday_date: str, coach_id: str = None, format_: str = None, location: str = None):
     """Создать запись в расписании"""
     data = {
@@ -66,12 +59,17 @@ async def create_sunday_schedule(sunday_date: str, coach_id: str = None, format_
     return result.data[0] if result.data else None
 
 
+async def update_sunday_coach(sunday_date: str, coach_id: str):
+    """Обновить тренера на воскресенье"""
+    result = supabase.table("sunday_schedule").update({"coach_id": coach_id}).eq("sunday_date", sunday_date).execute()
+    return result.data[0] if result.data else None
+
+
 async def get_upcoming_sundays_without_coach():
-    """Получить будущие воскресенья без назначенного тренера"""
-    from datetime import date
+    """Получить будущие воскресенья без тренера"""
     today = date.today().isoformat()
     result = supabase.table("sunday_schedule").select("*").gte("sunday_date", today).is_("coach_id", "null").execute()
-    return result.data
+    return result.data if result.data else []
 
 
 # ========== ТРЕНИРОВКИ ==========
@@ -92,6 +90,12 @@ async def create_workout(user_id: str, coach_id: str, sunday_date: str, distance
 async def get_user_workout_for_sunday(user_id: str, sunday_date: str):
     """Проверить, есть ли уже тренировка у пользователя в это воскресенье"""
     result = supabase.table("workouts").select("*").eq("user_id", user_id).eq("sunday_date", sunday_date).execute()
+    return result.data[0] if result.data else None
+
+
+async def get_workout_by_id(workout_id: str):
+    """Получить тренировку по ID"""
+    result = supabase.table("workouts").select("*").eq("id", workout_id).execute()
     return result.data[0] if result.data else None
 
 
@@ -119,21 +123,28 @@ async def create_rating(workout_id: str, user_id: str, coach_id: str, pro: int, 
 async def has_rating_for_workout(workout_id: str):
     """Проверить, есть ли уже оценка за эту тренировку"""
     result = supabase.table("coach_ratings").select("id").eq("workout_id", workout_id).execute()
-    return len(result.data) > 0
-
-
-# ========== БЕЙДЖИ ==========
-async def get_user_badges(user_id: str):
-    """Получить бейджи пользователя"""
-    result = supabase.table("badges").select("*").eq("user_id", user_id).execute()
-    return result.data
+    return len(result.data) > 0 if result.data else False
 
 
 # ========== ПРИЗЫ ==========
 async def get_random_prize_for_user(user_id: str):
     """Получить случайный приз (без повторов)"""
-    result = supabase.rpc("get_random_prize_for_user", {"p_user_id": user_id}).execute()
-    return result.data[0] if result.data else None
+    # Все активные призы
+    all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
+    
+    if not all_prizes.data:
+        return None
+    
+    # Уже выданные пользователю
+    user_prizes = supabase.table("user_prizes").select("prize_id").eq("user_id", user_id).execute()
+    used_ids = [up["prize_id"] for up in user_prizes.data] if user_prizes.data else []
+    
+    available = [p for p in all_prizes.data if p["id"] not in used_ids]
+    
+    if not available:
+        return None
+    
+    return random.choice(available)
 
 
 async def award_prize(user_id: str, prize_id: str, awarded_for: str):
@@ -147,33 +158,8 @@ async def award_prize(user_id: str, prize_id: str, awarded_for: str):
     return result.data[0] if result.data else None
 
 
-async def get_user_prizes(user_id: str):
-    """Получить призы пользователя"""
-    result = supabase.table("user_prizes").select("*, prizes_pool(*)").eq("user_id", user_id).execute()
-    return result.data
-
-
 # ========== РЕЙТИНГИ ==========
 async def get_rating_by_km():
     """Рейтинг по километражу"""
     result = supabase.table("rating_by_km").select("*").limit(50).execute()
-    return result.data
-
-
-async def get_rating_by_workouts():
-    """Рейтинг по количеству тренировок"""
-    result = supabase.table("rating_by_workouts").select("*").limit(50).execute()
-    return result.data
-
-
-async def get_rating_by_streak():
-    """Рейтинг по серии"""
-    result = supabase.table("rating_by_streak").select("*").limit(50).execute()
-    return result.data
-
-
-# ========== СТАТИСТИКА ==========
-async def get_user_full_stats(user_id: str):
-    """Полная статистика пользователя для Web App"""
-    result = supabase.table("user_full_stats").select("*").eq("id", user_id).execute()
-    return result.data[0] if result.data else None
+    return result.data if result.data else []
