@@ -1,0 +1,16 @@
+@dp.message_handler(lambda message: message.text == "📱 Открыть приложение")
+async def button_app(message: types.Message):
+    user_id = message.from_user.id
+    webapp_url = f"{WEBHOOK_HOST}/webapp?user_id={user_id}"
+    
+    await message.answer(
+        "📱 Нажми кнопку ниже, чтобы открыть личный кабинет:",
+        reply_markup=types.InlineKeyboardMarkup(
+            inline_keyboard=[[
+                types.InlineKeyboardButton(
+                    text="🚀 ОТКРЫТЬ LETSKI CLUB",
+                    web_app=types.WebAppInfo(url=webapp_url)
+                )
+            ]]
+        )
+    )
