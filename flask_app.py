@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 telegram_bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
 Bot.set_current(telegram_bot)
 dp = Dispatcher(telegram_bot)
+Dispatcher.set_current(dp)
 dp.middleware.setup(LoggingMiddleware())
 
 # Flask приложение
