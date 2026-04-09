@@ -119,7 +119,7 @@ async def handle_workout_photo(message: types.Message):
     coach_name = schedule.get("coaches", {}).get("full_name", "Неизвестный тренер")
     pace = calculate_pace(parsed["km"], parsed["min"])
     
-    group_message = await bot.send_photo(
+    group_message = await telegram_bot.send_photo(
         chat_id=MAIN_CHAT_ID,
         photo=message.photo[-1].file_id,
         caption=(
