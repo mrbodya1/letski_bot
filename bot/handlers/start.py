@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-from flask_app import dp, telegram_bot
+from flask_app import dp
 from bot.utils.supabase import get_profile, create_profile
 from bot.keyboards.reply import get_gender_keyboard, get_main_menu_keyboard
 
@@ -97,7 +97,7 @@ async def cmd_help(message: types.Message):
         "1️⃣ Сделай фото с тренировки\n"
         "2️⃣ В подписи укажи:\n"
         "<code>#dayX #kmX #tX</code>\n"
-        "3️⃣ Отправь в это воскресенье\n\n"
+        "3️⃣ Отправь в воскресенье\n\n"
         "<b>Пример:</b>\n"
         "<code>#day1 #km10 #t45</code>\n\n"
         "❓ Вопросы? Пиши @Stroitelev_Fedor",
@@ -124,3 +124,23 @@ async def cmd_profile(message: types.Message):
         f"📏 Всего км: {profile['total_km']} км",
         parse_mode="HTML"
     )
+
+
+# ========== ОБРАБОТЧИКИ КНОПОК МЕНЮ ==========
+@dp.message_handler(lambda message: message.text == "📊 Мой профиль")
+async def button_profile(message: types.Message):
+    await cmd_profile(message)
+
+
+@dp.message_handler(lambda message: message.text == "📱 Открыть приложение")
+async def button_app(message: types.Message):
+    await message.answer(
+        "📱 <b>Веб-приложение в разработке</b>\n\n"
+        "Скоро здесь будет личный кабинет с полной статистикой!",
+        parse_mode="HTML"
+    )
+
+
+@dp.message_handler(lambda message: message.text == "ℹ️ Помощь")
+async def button_help(message: types.Message):
+    await cmd_help(message)
