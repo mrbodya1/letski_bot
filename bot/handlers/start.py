@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-from flask_app import dp
+from flask_app import dp, telegram_bot
 from bot.utils.supabase import get_profile, create_profile
 from bot.keyboards.reply import get_gender_keyboard, get_main_menu_keyboard
 
