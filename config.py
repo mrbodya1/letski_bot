@@ -13,7 +13,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # ========== WEBHOOK ==========
-WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "")
+WEBHOOK_HOST = "https://letski-bot.onrender.com"
 WEBHOOK_PATH = "/webhook"
 
 # ========== НАСТРОЙКИ ==========
