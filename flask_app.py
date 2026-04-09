@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 from flask import Flask, request, abort
@@ -88,4 +89,4 @@ def webapp():
 
 # Для локального тестирования
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    n(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
