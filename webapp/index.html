@@ -336,13 +336,18 @@
         .rating-tab {
             flex: 1;
             text-align: center;
-            padding: 12px;
+            padding: 12px 4px;
             font-size: 14px;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
             color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            min-height: 44px;
         }
 
         .rating-tab.active {
@@ -425,11 +430,11 @@
             bottom: 0;
             left: 0;
             right: 0;
-            max-width: 480px;
+            max-width: 100%;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            padding: 10px 16px;
+            padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
             display: flex;
             justify-content: space-around;
             border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -440,12 +445,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 8px 16px;
+            gap: 2px;
+            padding: 6px 8px;
             border-radius: 40px;
             cursor: pointer;
             transition: all 0.3s;
             color: #666;
+            flex: 0 1 auto;
+            min-width: 56px;
         }
 
         .nav-item.active {
@@ -509,6 +516,32 @@
             text-decoration: none;
             font-weight: 600;
             border-bottom: 1px dashed #1e3c72;
+        }
+
+        /* Адаптив для маленьких экранов */
+        @media (max-width: 360px) {
+            .nav-item {
+                padding: 4px 4px;
+                min-width: 48px;
+            }
+            .nav-emoji {
+                font-size: 20px;
+            }
+            .nav-label {
+                font-size: 8px;
+            }
+            .rating-tab {
+                font-size: 12px;
+                padding: 10px 2px;
+                min-height: 40px;
+            }
+        }
+        
+        /* Поддержка безопасной зоны для iPhone */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            body {
+                padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+            }
         }
     </style>
 </head>
