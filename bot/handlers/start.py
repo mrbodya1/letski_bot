@@ -138,15 +138,6 @@ async def button_profile(message: types.Message):
     await cmd_profile(message)
 
 
-@dp.message_handler(lambda message: message.text == "📱 Открыть приложение")
-async def button_app(message: types.Message):
-    await message.answer(
-        "📱 <b>Веб-приложение в разработке</b>\n\n"
-        "Скоро здесь будет личный кабинет с полной статистикой!",
-        parse_mode="HTML"
-    )
-
-
 @dp.message_handler(lambda message: message.text == "ℹ️ Помощь")
 async def button_help(message: types.Message):
     await cmd_help(message)
