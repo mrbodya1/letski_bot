@@ -8,13 +8,12 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Шрифт Inter (современный гротеск) -->
+    <!-- Шрифт Onest (похож на тот, что на сайте) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== СБРОС СТИЛЕЙ ===== */
         * {
             margin: 0;
             padding: 0;
@@ -22,57 +21,21 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #FAFAFA;
-            color: #000000;
-            padding-bottom: 80px;
+            font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
             min-height: 100vh;
+            color: #FFFFFF;
+            padding-bottom: 90px;
         }
 
-        /* ===== ЦВЕТА LETSKI ===== */
-        :root {
-            --primary: #000000;
-            --accent: #CCFF00;
-            --bg: #FAFAFA;
-            --card: #FFFFFF;
-            --text-primary: #000000;
-            --text-secondary: #666666;
-            --border: #EEEEEE;
-            --success: #00C853;
-        }
-
-        /* ===== ТИПОГРАФИКА ===== */
-        h1 {
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        h2 {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.3px;
-        }
-
-        h3 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        p, .text-secondary {
-            color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        /* ===== КОНТЕЙНЕР ===== */
+        /* Контейнер */
         .container {
             max-width: 480px;
             margin: 0 auto;
             padding: 20px 16px;
         }
 
-        /* ===== ХЕДЕР ===== */
+        /* Хедер */
         .header {
             display: flex;
             justify-content: space-between;
@@ -81,29 +44,32 @@
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 800;
             letter-spacing: -0.5px;
+            color: #FFFFFF;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .logo span {
-            color: var(--accent);
-            background: var(--primary);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 18px;
-            margin-left: 4px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* ===== КАРТОЧКА ПРОФИЛЯ ===== */
-        .profile-card {
-            background: var(--card);
-            border-radius: 24px;
+        /* Карточки */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
             padding: 24px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #1a1a2e;
         }
 
+        /* Профиль */
         .profile-header {
             display: flex;
             align-items: center;
@@ -112,34 +78,41 @@
         }
 
         .avatar {
-            width: 64px;
-            height: 64px;
-            background: var(--primary);
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 700;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            border: 3px solid #FFD700;
         }
 
         .profile-info h2 {
-            margin-bottom: 4px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 6px;
         }
 
         .streak-badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            background: var(--accent);
-            padding: 4px 12px;
-            border-radius: 20px;
+            gap: 6px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 6px 16px;
+            border-radius: 30px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
+            color: #1a1a2e;
+            box-shadow: 0 4px 8px rgba(255, 165, 0, 0.3);
         }
 
-        /* ===== СТАТИСТИКА ===== */
+        /* Статистика */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -149,19 +122,26 @@
 
         .stat-item {
             text-align: center;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, #f5f7fa, #e8ecf1);
+            border-radius: 20px;
         }
 
         .stat-value {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
+            color: #1e3c72;
         }
 
         .stat-label {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== СЕКЦИИ ===== */
+        /* Секции */
         .section {
             margin-bottom: 24px;
         }
@@ -170,16 +150,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            padding: 0 4px;
         }
 
         .section-title h3 {
+            font-size: 18px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 14px;
+            letter-spacing: 1px;
+            color: #FFFFFF;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        /* ===== БЕЙДЖИ ===== */
+        .section-title span {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFD700;
+        }
+
+        /* Бейджи */
         .badges-container {
             display: flex;
             gap: 12px;
@@ -187,44 +180,49 @@
         }
 
         .badge {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            border: 1px solid var(--border);
+            gap: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
         .badge-emoji {
-            font-size: 28px;
+            font-size: 32px;
         }
 
         .badge-info h4 {
-            font-size: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
             margin-bottom: 2px;
         }
 
         .badge-info p {
             font-size: 12px;
+            color: #666;
         }
 
-        /* ===== ПРИЗЫ ===== */
+        /* Призы */
         .prize-item {
-            background: var(--card);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 16px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            border: 1px solid var(--border);
+            gap: 14px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
         .prize-emoji {
-            font-size: 32px;
+            font-size: 36px;
         }
 
         .prize-info {
@@ -233,63 +231,75 @@
 
         .prize-info h4 {
             font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
             margin-bottom: 4px;
         }
 
         .prize-info p {
             font-size: 13px;
+            color: #666;
         }
 
         .prize-status {
             font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: var(--accent);
-            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            font-weight: 700;
+            color: #1a1a2e;
+            box-shadow: 0 4px 8px rgba(255, 165, 0, 0.3);
         }
 
         .prize-status.claimed {
-            background: var(--success);
+            background: linear-gradient(135deg, #00C853, #00A844);
             color: white;
         }
 
-        /* ===== ТАБЛИЦА РЕЙТИНГА ===== */
+        /* Табы рейтинга */
         .rating-tabs {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
-            background: var(--card);
-            padding: 4px;
-            border-radius: 40px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 6px;
+            border-radius: 50px;
         }
 
         .rating-tab {
             flex: 1;
             text-align: center;
-            padding: 10px;
+            padding: 12px;
             font-size: 14px;
-            font-weight: 500;
-            border-radius: 40px;
+            font-weight: 600;
+            border-radius: 50px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .rating-tab.active {
-            background: var(--primary);
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
+        /* Список рейтинга */
         .rating-list {
-            background: var(--card);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
             overflow: hidden;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
         }
 
         .rating-item {
             display: flex;
             align-items: center;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: #1a1a2e;
         }
 
         .rating-item:last-child {
@@ -297,32 +307,38 @@
         }
 
         .rating-item.current-user {
-            background: var(--accent);
+            background: linear-gradient(135deg, #FFD700, #FFB300);
         }
 
         .rating-place {
-            width: 36px;
-            font-weight: 700;
-            font-size: 16px;
+            width: 40px;
+            font-weight: 800;
+            font-size: 18px;
         }
 
         .rating-user {
             flex: 1;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .rating-value {
-            font-weight: 700;
-            font-size: 16px;
+            font-weight: 800;
+            font-size: 18px;
+            color: #1e3c72;
         }
 
-        /* ===== ТРЕНИРОВКИ ===== */
+        .current-user .rating-value {
+            color: #1a1a2e;
+        }
+
+        /* Тренировки */
         .workout-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .workout-item:last-child {
@@ -331,19 +347,21 @@
 
         .workout-date {
             font-size: 14px;
-            color: var(--text-secondary);
+            opacity: 0.7;
         }
 
         .workout-data {
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .workout-pace {
             font-size: 13px;
-            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
         }
 
-        /* ===== НИЖНЕЕ МЕНЮ ===== */
+        /* Нижнее меню */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -351,12 +369,12 @@
             right: 0;
             max-width: 480px;
             margin: 0 auto;
-            background: var(--card);
-            border-top: 1px solid var(--border);
-            padding: 8px 16px;
+            background: rgba(15, 32, 39, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 10px 16px;
             display: flex;
             justify-content: space-around;
-            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .nav-item {
@@ -364,36 +382,35 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            padding: 8px 20px;
+            padding: 8px 18px;
             border-radius: 40px;
             cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-secondary);
+            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .nav-item.active {
-            background: var(--primary);
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .nav-emoji {
-            font-size: 22px;
+            font-size: 24px;
         }
 
         .nav-label {
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== УТИЛИТЫ ===== */
+        /* Утилиты */
         .loading {
             text-align: center;
             padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .hidden {
-            display: none !important;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .page {
@@ -404,43 +421,45 @@
             display: block;
         }
 
-        /* ===== КНОПКА ===== */
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 24px;
-            border-radius: 60px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
+        /* Правила */
+        .rules-content {
+            color: #1a1a2e;
         }
 
-        .btn-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 1.5px solid var(--primary);
+        .rules-content h2 {
+            margin-bottom: 24px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .rules-content h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+
+        .rules-content p {
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- СТРАНИЦА ПРОФИЛЯ -->
+        <!-- ПРОФИЛЬ -->
         <div id="page-profile" class="page active">
             <div class="header">
-                <div class="logo">LETSKI<span>club</span></div>
+                <div class="logo">LETSKI<span>school</span></div>
             </div>
             
-            <div class="profile-card">
+            <div class="card">
                 <div class="profile-header">
                     <div class="avatar" id="user-avatar">Б</div>
                     <div class="profile-info">
                         <h2 id="user-name">Богдан</h2>
-                        <span class="streak-badge" id="user-streak">
-                            🔥 4 воскресенья
-                        </span>
+                        <span class="streak-badge" id="user-streak">🔥 4 воскресенья</span>
                     </div>
                 </div>
                 
@@ -465,9 +484,7 @@
                     <h3>🏅 Бейджи</h3>
                     <span id="badges-count">4</span>
                 </div>
-                <div class="badges-container" id="badges-list">
-                    <!-- Заполняется через JS -->
-                </div>
+                <div class="badges-container" id="badges-list"></div>
             </div>
             
             <div class="section">
@@ -475,25 +492,21 @@
                     <h3>🎁 Твои призы</h3>
                     <span id="prizes-count">2</span>
                 </div>
-                <div id="prizes-list">
-                    <!-- Заполняется через JS -->
-                </div>
+                <div id="prizes-list"></div>
             </div>
             
             <div class="section">
                 <div class="section-title">
                     <h3>📊 Последние тренировки</h3>
                 </div>
-                <div id="recent-workouts">
-                    <!-- Заполняется через JS -->
-                </div>
+                <div class="card" id="recent-workouts" style="padding: 8px 20px;"></div>
             </div>
         </div>
         
-        <!-- СТРАНИЦА РЕЙТИНГА -->
+        <!-- РЕЙТИНГ -->
         <div id="page-rating" class="page">
             <div class="header">
-                <div class="logo">LETSKI<span>club</span></div>
+                <div class="logo">LETSKI<span>school</span></div>
             </div>
             
             <div class="rating-tabs">
@@ -503,47 +516,38 @@
             </div>
             
             <div class="rating-list" id="rating-list">
-                <!-- Заполняется через JS -->
                 <div class="loading">Загрузка рейтинга...</div>
             </div>
         </div>
         
-        <!-- СТРАНИЦА ПРИЗОВ -->
+        <!-- ПРИЗЫ -->
         <div id="page-prizes" class="page">
             <div class="header">
-                <div class="logo">LETSKI<span>club</span></div>
+                <div class="logo">LETSKI<span>school</span></div>
             </div>
             
             <div class="section">
-                <div class="section-title">
-                    <h3>🎁 Доступные призы</h3>
-                </div>
-                <div id="available-prizes-list">
-                    <div class="loading">Загрузка...</div>
-                </div>
+                <div class="section-title"><h3>🎁 Доступные призы</h3></div>
+                <div id="available-prizes-list"><div class="loading">Загрузка...</div></div>
             </div>
             
             <div class="section">
-                <div class="section-title">
-                    <h3>✅ Твои призы</h3>
-                </div>
-                <div id="my-prizes-list">
-                    <div class="loading">Загрузка...</div>
-                </div>
+                <div class="section-title"><h3>✅ Твои призы</h3></div>
+                <div id="my-prizes-list"><div class="loading">Загрузка...</div></div>
             </div>
         </div>
         
-        <!-- СТРАНИЦА ПРАВИЛ -->
+        <!-- ПРАВИЛА -->
         <div id="page-rules" class="page">
             <div class="header">
-                <div class="logo">LETSKI<span>club</span></div>
+                <div class="logo">LETSKI<span>school</span></div>
             </div>
             
-            <div class="profile-card">
-                <h2 style="margin-bottom: 20px;">📜 Правила клуба</h2>
+            <div class="card rules-content">
+                <h2>📜 Правила клуба</h2>
                 
                 <div style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 8px;">🏃 Тренировки</h3>
+                    <h3>🏃 Тренировки</h3>
                     <p>• Каждое воскресенье<br>
                     • Отчёт принимается только в день тренировки<br>
                     • Формат подписи: #kmX #minX<br>
@@ -551,7 +555,7 @@
                 </div>
                 
                 <div style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 8px;">🏅 Бейджи и призы</h3>
+                    <h3>🏅 Бейджи и призы</h3>
                     <p>• Серия 4 воскресенья — бейдж + приз<br>
                     • Серия 8 воскресений — бейдж + приз<br>
                     • Серия 12 воскресений — бейдж + приз<br>
@@ -559,20 +563,20 @@
                 </div>
                 
                 <div style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 8px;">⭐️ Рейтинг тренеров</h3>
+                    <h3>⭐️ Рейтинг тренеров</h3>
                     <p>• После каждой тренировки оцени тренера<br>
                     • Оценки анонимны и помогают нам становиться лучше</p>
                 </div>
                 
                 <div style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 8px;">📊 Таблица лидеров</h3>
+                    <h3>📊 Таблица лидеров</h3>
                     <p>• По общему километражу<br>
                     • По количеству тренировок<br>
                     • По серии посещений</p>
                 </div>
                 
                 <div>
-                    <h3 style="margin-bottom: 8px;">❓ Вопросы?</h3>
+                    <h3>❓ Вопросы?</h3>
                     <p>Пиши администратору: @Stroitelev_Fedor</p>
                 </div>
             </div>
@@ -600,230 +604,175 @@
     </div>
 
     <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
-    
-    // Цвета из темы Telegram
-    document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color || '#FAFAFA');
-    document.documentElement.style.setProperty('--card', tg.themeParams.secondary_bg_color || '#FFFFFF');
-    document.documentElement.style.setProperty('--text-primary', tg.themeParams.text_color || '#000000');
-    document.documentElement.style.setProperty('--text-secondary', tg.themeParams.hint_color || '#666666');
-    
-    // ID пользователя из URL или из Telegram
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
-    
-    // API URL
-    const API_BASE = window.location.origin;
-    
-    // Навигация
-    const pages = {
-        profile: document.getElementById('page-profile'),
-        rating: document.getElementById('page-rating'),
-        prizes: document.getElementById('page-prizes'),
-        rules: document.getElementById('page-rules')
-    };
-    
-    const navItems = document.querySelectorAll('.nav-item');
-    
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.dataset.page;
-            
-            navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
-            
-            Object.values(pages).forEach(p => p.classList.remove('active'));
-            pages[page].classList.add('active');
-            
-            if (page === 'rating') loadRating();
-            if (page === 'prizes') loadPrizes();
-        });
-    });
-    
-    // Вкладки рейтинга
-    document.querySelectorAll('.rating-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.rating-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            loadRating(tab.dataset.tab);
-        });
-    });
-    
-    // Загрузка профиля
-    async function loadProfile() {
-        if (!userId) {
-            document.getElementById('user-name').textContent = 'Гость';
-            return;
-        }
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
         
-        try {
-            const response = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
-            const data = await response.json();
-            
-            if (data.error) {
-                console.error(data.error);
-                return;
-            }
-            
-            // Заполняем профиль
-            document.getElementById('user-name').textContent = data.full_name;
-            document.getElementById('user-avatar').textContent = data.full_name[0];
-            document.getElementById('user-streak').innerHTML = `🔥 ${data.sunday_streak} воскресенья`;
-            
-            document.getElementById('stat-workouts').textContent = data.total_sundays || 0;
-            document.getElementById('stat-km').textContent = data.total_km || 0;
-            
-            // Средний темп
-            if (data.workouts && data.workouts.length > 0) {
-                const avgPace = data.workouts.reduce((sum, w) => sum + w.pace, 0) / data.workouts.length;
-                const minutes = Math.floor(avgPace);
-                const seconds = Math.round((avgPace - minutes) * 60);
-                document.getElementById('stat-pace').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-            
-            // Бейджи
-            const badgesList = document.getElementById('badges-list');
-            const badgeEmojis = {
-                'first_workout': '🚀',
-                'streak_4': '🔥',
-                'streak_8': '🔥🔥',
-                'streak_12': '🔥🔥🔥',
-                'km_100': '🏆'
-            };
-            const badgeNames = {
-                'first_workout': 'Первый шаг',
-                'streak_4': 'Серия 4',
-                'streak_8': 'Серия 8',
-                'streak_12': 'Серия 12',
-                'km_100': '100 км'
-            };
-            
-            badgesList.innerHTML = data.badges.map(b => `
-                <div class="badge">
-                    <span class="badge-emoji">${badgeEmojis[b.badge_type] || '🏅'}</span>
-                    <div class="badge-info">
-                        <h4>${badgeNames[b.badge_type] || b.badge_type}</h4>
-                    </div>
-                </div>
-            `).join('');
-            document.getElementById('badges-count').textContent = data.badges.length;
-            
-            // Призы
-            const prizesList = document.getElementById('prizes-list');
-            const myPrizes = data.prizes || [];
-            prizesList.innerHTML = myPrizes.map(p => `
-                <div class="prize-item">
-                    <span class="prize-emoji">🎁</span>
-                    <div class="prize-info">
-                        <h4>${p.prizes_pool?.name || 'Приз'}</h4>
-                        <p>${p.prizes_pool?.partner || ''}</p>
-                    </div>
-                    <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
-                </div>
-            `).join('');
-            document.getElementById('prizes-count').textContent = myPrizes.length;
-            
-            // Тренировки
-            const workoutsDiv = document.getElementById('recent-workouts');
-            workoutsDiv.innerHTML = (data.workouts || []).map(w => `
-                <div class="workout-item">
-                    <span class="workout-date">${new Date(w.sunday_date).toLocaleDateString('ru-RU')}</span>
-                    <span class="workout-data">${w.distance_km} км / ${w.duration_min} мин</span>
-                    <span class="workout-pace">${w.pace?.toFixed(2) || '—'} мин/км</span>
-                </div>
-            `).join('');
-            
-        } catch (error) {
-            console.error('Ошибка загрузки профиля:', error);
-        }
-    }
-    
-    // Загрузка рейтинга
-    async function loadRating(type = 'km') {
-        const container = document.getElementById('rating-list');
-        container.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
+        // ID пользователя
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
+        const API_BASE = window.location.origin;
         
-        try {
-            const response = await fetch(`${API_BASE}/api/rating?type=${type}`);
-            const data = await response.json();
-            
-            const rating = data.rating || [];
-            const medals = ['🥇', '🥈', '🥉'];
-            const labels = { km: 'км', workouts: 'тр', streak: 'нед' };
-            
-            let currentUserId = userId;
-            if (currentUserId) {
-                const profileResponse = await fetch(`${API_BASE}/api/profile?user_id=${currentUserId}`);
-                const profileData = await profileResponse.json();
-                currentUserId = profileData.id;
-            }
-            
-            container.innerHTML = rating.map(r => {
-                const isCurrent = r.id === currentUserId;
-                let value;
-                if (type === 'km') value = r.total_km;
-                else if (type === 'workouts') value = r.total_sundays;
-                else value = r.sunday_streak;
+        // Навигация
+        const pages = {
+            profile: document.getElementById('page-profile'),
+            rating: document.getElementById('page-rating'),
+            prizes: document.getElementById('page-prizes'),
+            rules: document.getElementById('page-rules')
+        };
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
                 
-                return `
-                    <div class="rating-item ${isCurrent ? 'current-user' : ''}">
-                        <span class="rating-place">${r.place <= 3 ? medals[r.place-1] : r.place}</span>
-                        <span class="rating-user">${r.full_name}</span>
-                        <span class="rating-value">${value || 0} ${labels[type]}</span>
-                    </div>
-                `;
-            }).join('');
-            
-        } catch (error) {
-            console.error('Ошибка загрузки рейтинга:', error);
-            container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
-        }
-    }
-    
-    // Загрузка призов
-    async function loadPrizes() {
-        const availableContainer = document.getElementById('available-prizes-list');
-        const myContainer = document.getElementById('my-prizes-list');
+                navItems.forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                
+                Object.values(pages).forEach(p => p.classList.remove('active'));
+                pages[page].classList.add('active');
+                
+                if (page === 'rating') loadRating();
+                if (page === 'prizes') loadPrizes();
+            });
+        });
         
-        try {
-            const response = await fetch(`${API_BASE}/api/prizes?user_id=${userId}`);
-            const data = await response.json();
+        // Вкладки рейтинга
+        document.querySelectorAll('.rating-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.rating-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                loadRating(tab.dataset.tab);
+            });
+        });
+        
+        // Загрузка профиля
+        async function loadProfile() {
+            if (!userId) return;
             
-            availableContainer.innerHTML = data.available.map(p => `
-                <div class="prize-item">
-                    <span class="prize-emoji">🎁</span>
-                    <div class="prize-info">
-                        <h4>${p.name}</h4>
-                        <p>${p.partner} · ${p.description || ''}</p>
+            try {
+                const response = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
+                const data = await response.json();
+                
+                if (data.error) return;
+                
+                document.getElementById('user-name').textContent = data.full_name;
+                document.getElementById('user-avatar').textContent = data.full_name[0];
+                document.getElementById('user-streak').innerHTML = `🔥 ${data.sunday_streak} воскресенья`;
+                document.getElementById('stat-workouts').textContent = data.total_sundays || 0;
+                document.getElementById('stat-km').textContent = data.total_km || 0;
+                
+                if (data.workouts && data.workouts.length > 0) {
+                    const avgPace = data.workouts.reduce((sum, w) => sum + w.pace, 0) / data.workouts.length;
+                    const minutes = Math.floor(avgPace);
+                    const seconds = Math.round((avgPace - minutes) * 60);
+                    document.getElementById('stat-pace').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                const badgeEmojis = {'first_workout':'🚀','streak_4':'🔥','streak_8':'🔥🔥','streak_12':'🔥🔥🔥','km_100':'🏆'};
+                const badgeNames = {'first_workout':'Первый шаг','streak_4':'Серия 4','streak_8':'Серия 8','streak_12':'Серия 12','km_100':'100 км'};
+                
+                document.getElementById('badges-list').innerHTML = data.badges.map(b => `
+                    <div class="badge">
+                        <span class="badge-emoji">${badgeEmojis[b.badge_type] || '🏅'}</span>
+                        <div class="badge-info"><h4>${badgeNames[b.badge_type] || b.badge_type}</h4></div>
                     </div>
-                </div>
-            `).join('');
-            
-            myContainer.innerHTML = data.my.map(p => `
-                <div class="prize-item">
-                    <span class="prize-emoji">✅</span>
-                    <div class="prize-info">
-                        <h4>${p.prizes_pool?.name || 'Приз'}</h4>
-                        <p>${p.prizes_pool?.partner || ''}</p>
+                `).join('');
+                document.getElementById('badges-count').textContent = data.badges.length;
+                
+                const myPrizes = data.prizes || [];
+                document.getElementById('prizes-list').innerHTML = myPrizes.map(p => `
+                    <div class="prize-item">
+                        <span class="prize-emoji">🎁</span>
+                        <div class="prize-info">
+                            <h4>${p.prizes_pool?.name || 'Приз'}</h4>
+                            <p>${p.prizes_pool?.partner || ''}</p>
+                        </div>
+                        <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
                     </div>
-                    <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
-                </div>
-            `).join('');
-            
-        } catch (error) {
-            console.error('Ошибка загрузки призов:', error);
+                `).join('');
+                document.getElementById('prizes-count').textContent = myPrizes.length;
+                
+                document.getElementById('recent-workouts').innerHTML = (data.workouts || []).map(w => `
+                    <div class="workout-item">
+                        <span class="workout-date">${new Date(w.sunday_date).toLocaleDateString('ru-RU')}</span>
+                        <span class="workout-data">${w.distance_km} км / ${w.duration_min} мин</span>
+                        <span class="workout-pace">${w.pace?.toFixed(2) || '—'} мин/км</span>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
         }
-    }
-    
-    // Загрузка при старте
-    loadProfile();
-    
-    // Кнопка "Назад"
-    tg.BackButton.onClick(() => {
-        document.querySelector('.nav-item[data-page="profile"]').click();
-    });
-</script>
+        
+        async function loadRating(type = 'km') {
+            const container = document.getElementById('rating-list');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/rating?type=${type}`);
+                const data = await response.json();
+                const rating = data.rating || [];
+                const medals = ['🥇', '🥈', '🥉'];
+                const labels = { km: 'км', workouts: 'тр', streak: 'нед' };
+                
+                let currentUserId = userId;
+                if (currentUserId) {
+                    const profileResponse = await fetch(`${API_BASE}/api/profile?user_id=${currentUserId}`);
+                    const profileData = await profileResponse.json();
+                    currentUserId = profileData.id;
+                }
+                
+                container.innerHTML = rating.map(r => {
+                    const isCurrent = r.id === currentUserId;
+                    let value = type === 'km' ? r.total_km : (type === 'workouts' ? r.total_sundays : r.sunday_streak);
+                    return `
+                        <div class="rating-item ${isCurrent ? 'current-user' : ''}">
+                            <span class="rating-place">${r.place <= 3 ? medals[r.place-1] : r.place}</span>
+                            <span class="rating-user">${r.full_name}</span>
+                            <span class="rating-value">${value || 0} ${labels[type]}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
+            }
+        }
+        
+        async function loadPrizes() {
+            try {
+                const response = await fetch(`${API_BASE}/api/prizes?user_id=${userId}`);
+                const data = await response.json();
+                
+                document.getElementById('available-prizes-list').innerHTML = data.available.map(p => `
+                    <div class="prize-item">
+                        <span class="prize-emoji">🎁</span>
+                        <div class="prize-info">
+                            <h4>${p.name}</h4>
+                            <p>${p.partner} · ${p.description || ''}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('my-prizes-list').innerHTML = data.my.map(p => `
+                    <div class="prize-item">
+                        <span class="prize-emoji">✅</span>
+                        <div class="prize-info">
+                            <h4>${p.prizes_pool?.name || 'Приз'}</h4>
+                            <p>${p.prizes_pool?.partner || ''}</p>
+                        </div>
+                        <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        }
+        
+        loadProfile();
+        tg.BackButton.onClick(() => document.querySelector('.nav-item[data-page="profile"]').click());
+    </script>
 </body>
 </html>
