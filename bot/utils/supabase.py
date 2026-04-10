@@ -163,3 +163,35 @@ async def get_rating_by_km():
     """Рейтинг по километражу"""
     result = supabase.table("rating_by_km").select("*").limit(50).execute()
     return result.data if result.data else []
+
+# ========== БЕЙДЖИ ==========
+async def get_user_badges(user_id: str):
+    """Получить бейджи пользователя"""
+    result = supabase.table("badges").select("*").eq("user_id", user_id).execute()
+    return result.data if result.data else []
+
+
+# ========== ПРИЗЫ ==========
+async def get_all_active_prizes():
+    """Получить все активные призы"""
+    result = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
+    return result.data if result.data else []
+
+
+async def get_user_prizes(user_id: str):
+    """Получить призы пользователя с информацией о призе"""
+    result = supabase.table("user_prizes").select("*, prizes_pool(*)").eq("user_id", user_id).execute()
+    return result.data if result.data else []
+
+
+# ========== РЕЙТИНГИ ==========
+async def get_rating_by_workouts():
+    """Рейтинг по количеству тренировок"""
+    result = supabase.table("rating_by_workouts").select("*").limit(50).execute()
+    return result.data if result.data else []
+
+
+async def get_rating_by_streak():
+    """Рейтинг по серии"""
+    result = supabase.table("rating_by_streak").select("*").limit(50).execute()
+    return result.data if result.data else []
