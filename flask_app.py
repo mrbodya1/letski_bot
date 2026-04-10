@@ -76,6 +76,88 @@ def telegram_webhook():
     asyncio.run(process())
     return 'OK'
 
+# ========== API ДЛЯ WEB APP ==========
+@app.route('/api/profile')
+def api_profile():
+    """API для получения профиля пользователя"""
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return {"error": "user_id required"}, 400
+    
+    # Запускаем асинхронную функцию
+    async def get_data():
+        from bot.utils.supabase import get_profile, get_user_badges, get_user_prizes, get_workouts_by_telegram_id
+        
+        profile = await get_profile(int(user_id))
+        if not profile:
+            return {"error": "Profile not found"}, 404
+        
+        badges = await get_user_badges(profile["id"])
+        prizes = await get_user_prizes(profile["id"])
+        workouts = await get_workouts_by_telegram_id(int(user_id))
+        
+        # Формируем ответ
+        return {
+            "full_name": profile["full_name"],
+            "gender": profile["gender"],
+            "sunday_streak": profile["sunday_streak"],
+            "max_sunday_streak": profile["max_sunday_streak"],
+            "total_sundays": profile["total_sundays"],
+            "total_km": profile["total_km"],
+            "badges": badges,
+            "prizes": prizes,
+            "workouts": workouts[:5]  # последние 5 тренировок
+        }
+    
+    result = asyncio.run(get_data())
+    return result
+
+
+@app.route('/api/rating')
+def api_rating():
+    """API для получения рейтинга"""
+    rating_type = request.args.get('type', 'km')
+    
+    async def get_data():
+        from bot.utils.supabase import get_rating_by_km, get_rating_by_workouts, get_rating_by_streak
+        
+        if rating_type == 'km':
+            return await get_rating_by_km()
+        elif rating_type == 'workouts':
+            return await get_rating_by_workouts()
+        elif rating_type == 'streak':
+            return await get_rating_by_streak()
+        else:
+            return []
+    
+    result = asyncio.run(get_data())
+    return {"rating": result}
+
+
+@app.route('/api/prizes')
+def api_prizes():
+    """API для получения призов"""
+    user_id = request.args.get('user_id')
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_active_prizes, get_user_prizes, get_profile
+        
+        all_prizes = await get_all_active_prizes()
+        
+        if user_id:
+            profile = await get_profile(int(user_id))
+            if profile:
+                my_prizes = await get_user_prizes(profile["id"])
+                my_prize_ids = [p["prize_id"] for p in my_prizes]
+                
+                available = [p for p in all_prizes if p["id"] not in my_prize_ids]
+                return {"available": available, "my": my_prizes}
+        
+        return {"available": all_prizes, "my": []}
+    
+    result = asyncio.run(get_data())
+    return result
+
 
 # Импортируем хендлеры
 import bot.handlers.start
