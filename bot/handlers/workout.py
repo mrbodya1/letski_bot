@@ -169,8 +169,11 @@ async def handle_workout_photo(message: types.Message):
     }
     
     awarded_badges = await check_and_award_badges(profile["id"], stats)
+    print(f"🏅 check_and_award_badges вернула: {awarded_badges}")
     
     for badge in awarded_badges:
+        print(f"📢 Отправляю уведомление о бейдже: {badge['name']}")
+        
         # В личку
         response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n{badge['emoji']} {badge['name']}\n"
         
@@ -188,8 +191,9 @@ async def handle_workout_photo(message: types.Message):
                 ),
                 parse_mode="HTML"
             )
+            print(f"✅ Уведомление о бейдже {badge['name']} отправлено")
         except Exception as e:
-            print(f"⚠️ Не удалось отправить уведомление о бейдже в чат: {e}")
+            print(f"❌ Ошибка отправки уведомления о бейдже: {e}")
     
     # ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА ПРИЗОВ ==========
     prize, level_name = await check_and_award_prize(profile["id"], total_sundays)
