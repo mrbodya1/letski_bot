@@ -1,4 +1,4 @@
-from aiogram import types, Bot
+from aiogram import types
 from aiogram.dispatcher.filters import Command
 from datetime import date
 
@@ -52,7 +52,7 @@ async def cmd_coaches(message: types.Message):
     for coach in coaches:
         text += f"• <b>{coach['full_name']}</b>\n"
         text += f"  ID: <code>{coach['id']}</code>\n"
-        text += f"  Рейтинг: {coach['avg_rating_pro']:.1f}/5 ({coach['total_ratings']} оценок)\n\n"
+        text += f"  Рейтинг: {coach.get('avg_rating_pro', 0):.1f}/5 ({coach.get('total_ratings', 0)} оценок)\n\n"
     
     await message.answer(text, parse_mode="HTML")
 
@@ -186,6 +186,7 @@ async def cmd_add_schedule(message: types.Message):
 @dp.message_handler(Command("broadcast"))
 async def cmd_broadcast(message: types.Message):
     if not is_admin(message.from_user.id):
+        await message.answer("❌ У тебя нет доступа")
         return
     
     if not message.reply_to_message:
@@ -193,7 +194,7 @@ async def cmd_broadcast(message: types.Message):
         return
     
     try:
-        await bot.copy_message(
+        await telegram_bot.copy_message(
             chat_id=MAIN_CHAT_ID,
             from_chat_id=message.chat.id,
             message_id=message.reply_to_message.message_id
@@ -218,126 +219,12 @@ async def cmd_top10(message: types.Message):
     for i, user in enumerate(rating[:10], 1):
         medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
         text += f"{medal} <b>{user['full_name']}</b>\n"
-        text += f"   📏 {user['total_km']} км | 🔥 {user['sunday_streak']} серия\n\n"
-    
-    await message.answer(text, parse_mode="HTML")
-
-# ========== УПРАВЛЕНИЕ БЕЙДЖАМИ ==========
-@dp.message_handler(Command("badges_list"))
-async def cmd_badges_list(message: types.Message):
-    """Список всех бейджей из каталога"""
-    if not is_admin(message.from_user.id):
-        return
-    
-    from bot.utils.supabase import get_badges_catalog
-    badges = await get_badges_catalog()
-    
-    if not badges:
-        await message.answer("📭 Каталог бейджей пуст")
-        return
-    
-    text = "🏅 <b>КАТАЛОГ БЕЙДЖЕЙ</b>\n\n"
-    for b in badges:
-        active = "✅" if b.get('is_active', True) else "❌"
-        text += f"{b['emoji']} <b>{b['name']}</b> ({b['badge_type']}) {active}\n"
-        text += f"   📋 {b['description']}\n"
-        text += f"   🎯 {b['condition_description']}\n\n"
+        text += f"   📏 {user['total_km']} км | 🔥 {user.get('sunday_streak', 0)} серия\n\n"
     
     await message.answer(text, parse_mode="HTML")
 
 
-@dp.message_handler(Command("prizes_list"))
-async def cmd_prizes_list(message: types.Message):
-    """Список всех призов"""
-    if not is_admin(message.from_user.id):
-        return
-    
-    from bot.utils.supabase import get_all_prizes_admin
-    prizes = await get_all_prizes_admin()
-    
-    if not prizes:
-        await message.answer("📭 Пул призов пуст")
-        return
-    
-    text = "🎁 <b>ПУЛ ПРИЗОВ</b>\n\n"
-    for p in prizes:
-        active = "✅" if p.get('is_active', True) else "❌"
-        qty = f"{p.get('remaining_quantity', -1)}/{p.get('total_quantity', -1)}" if p.get('total_quantity', -1) > 0 else "∞"
-        text += f"{active} <b>{p['name']}</b>\n"
-        text += f"   🏢 {p['partner']} | {p['category']}\n"
-        text += f"   💰 {p['value']} | 🎫 {p.get('promo_code', '—')}\n"
-        text += f"   📦 Осталось: {qty}\n\n"
-    
-    await message.answer(text, parse_mode="HTML")
-
-
-@dp.message_handler(Command("add_prize"))
-async def cmd_add_prize(message: types.Message):
-    """Добавить приз: /add_prize Название | Партнёр | Тип | Ценность | Категория | Ссылка"""
-    if not is_admin(message.from_user.id):
-        return
-    
-    args = message.get_args()
-    if not args:
-        await message.answer(
-            "❌ Формат: /add_prize Название | Партнёр | Тип | Ценность | Категория | Ссылка\n\n"
-            "Типы: discount, gift, slot, merch, service\n"
-            "Категории: nutrition, gear, event, recovery, merch, service, general\n\n"
-            "Пример: /add_prize Скидка 20% | FitKit | discount | 20% | nutrition | https://fitkit.ru"
-        )
-        return
-    
-    parts = [p.strip() for p in args.split('|')]
-    if len(parts) < 4:
-        await message.answer("❌ Неверный формат. Нужно минимум 4 части через |")
-        return
-    
-    name = parts[0]
-    partner = parts[1] if len(parts) > 1 else ''
-    prize_type = parts[2] if len(parts) > 2 else 'gift'
-    value = parts[3] if len(parts) > 3 else ''
-    category = parts[4] if len(parts) > 4 else 'general'
-    link_url = parts[5] if len(parts) > 5 else None
-    
-    import random
-    import string
-    promo_code = f"LETSKI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
-    
-    from bot.utils.supabase import create_prize_with_link
-    prize = await create_prize_with_link(name, partner, prize_type, value, category, promo_code, link_url)
-    
-    if prize:
-        await message.answer(
-            f"✅ Приз добавлен!\n\n"
-            f"🎁 {name}\n"
-            f"🏢 {partner}\n"
-            f"📦 Тип: {prize_type}\n"
-            f"💰 Ценность: {value}\n"
-            f"🎫 Промокод: {promo_code}\n"
-            f"🔗 Ссылка: {link_url or 'не указана'}"
-        )
-    else:
-        await message.answer("❌ Ошибка при добавлении приза")
-
-
-@dp.message_handler(Command("toggle_prize"))
-async def cmd_toggle_prize(message: types.Message):
-    """Включить/выключить приз: /toggle_prize ID_ПРИЗА"""
-    if not is_admin(message.from_user.id):
-        return
-    
-    args = message.get_args()
-    if not args:
-        await message.answer("❌ Укажи ID приза: /toggle_prize UUID")
-        return
-    
-    prize_id = args.strip()
-    
-    from bot.utils.supabase import toggle_prize_active
-    result = await toggle_prize_active(prize_id)
-    
-    if result:
-        status = "активирован ✅" if result['is_active'] else "деактивирован ❌"
-        await message.answer(f"Приз {result['name']} {status}")
-    else:
-        await message.answer("❌ Приз не найден")
+@dp.callback_query_handler(lambda c: c.data == "admin_cancel")
+async def admin_cancel(callback: types.CallbackQuery):
+    await callback.message.edit_text("❌ Действие отменено")
+    await callback.answer()
