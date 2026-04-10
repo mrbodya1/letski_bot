@@ -122,25 +122,27 @@ async def handle_workout_photo(message: types.Message):
     
     # Определяем тип тренировки (тестовая или обычная)
     is_test = is_admin(user_id)
-    test_prefix = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n" if is_test else ""
+    if is_test:
+        test_prefix = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n"
+    else:
+        test_prefix = ""
     
-    try:
-        group_message = await telegram_bot.send_photo(
-            chat_id=MAIN_CHAT_ID,
-            photo=message.photo[-1].file_id,
-            caption=(
-                f"{test_prefix}"
-                f"✅ <b>Тренировка принята!</b>\n\n"
-                f"👤 {profile['full_name']}\n"
-                f"👟 Тренер: {coach_name}\n"
-                f"📏 Дистанция: {parsed['km']} км\n"
-                f"⏱ Время: {parsed['min']} мин\n"
-                f"⚡️ Темп: {format_pace(pace)} мин/км\n"
-                f"🔥 Серия: {new_streak} воскресений\n\n"
-                f"#km{parsed['km']} #min{parsed['min']}"
-            ),
-            parse_mode="HTML"
-        )
+    group_message = await telegram_bot.send_photo(
+        chat_id=MAIN_CHAT_ID,
+        photo=message.photo[-1].file_id,
+        caption=(
+            f"{test_prefix}"
+            f"✅ <b>Тренировка принята!</b>\n\n"
+            f"👤 {profile['full_name']}\n"
+            f"👟 Тренер: {coach_name}\n"
+            f"📏 Дистанция: {parsed['km']} км\n"
+            f"⏱ Время: {parsed['min']} мин\n"
+            f"⚡️ Темп: {format_pace(pace)} мин/км\n"
+            f"🔥 Серия: {new_streak} воскресений\n\n"
+            f"#km{parsed['km']} #min{parsed['min']}"
+        ),
+        parse_mode="HTML"
+    )
         await update_workout_repost(workout["id"], group_message.message_id)
     except Exception as e:
         print(f"⚠️ Не удалось отправить в общий чат: {e}")
