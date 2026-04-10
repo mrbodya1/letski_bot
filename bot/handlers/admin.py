@@ -221,3 +221,118 @@ async def cmd_top10(message: types.Message):
         text += f"   📏 {user['total_km']} км | 🔥 {user['sunday_streak']} серия\n\n"
     
     await message.answer(text, parse_mode="HTML")
+
+# ========== УПРАВЛЕНИЕ БЕЙДЖАМИ ==========
+@dp.message_handler(Command("badges_list"))
+async def cmd_badges_list(message: types.Message):
+    """Список всех бейджей из каталога"""
+    if not is_admin(message.from_user.id):
+        return
+    
+    from bot.utils.supabase import get_badges_catalog
+    badges = await get_badges_catalog()
+    
+    if not badges:
+        await message.answer("📭 Каталог бейджей пуст")
+        return
+    
+    text = "🏅 <b>КАТАЛОГ БЕЙДЖЕЙ</b>\n\n"
+    for b in badges:
+        active = "✅" if b.get('is_active', True) else "❌"
+        text += f"{b['emoji']} <b>{b['name']}</b> ({b['badge_type']}) {active}\n"
+        text += f"   📋 {b['description']}\n"
+        text += f"   🎯 {b['condition_description']}\n\n"
+    
+    await message.answer(text, parse_mode="HTML")
+
+
+@dp.message_handler(Command("prizes_list"))
+async def cmd_prizes_list(message: types.Message):
+    """Список всех призов"""
+    if not is_admin(message.from_user.id):
+        return
+    
+    from bot.utils.supabase import get_all_prizes_admin
+    prizes = await get_all_prizes_admin()
+    
+    if not prizes:
+        await message.answer("📭 Пул призов пуст")
+        return
+    
+    text = "🎁 <b>ПУЛ ПРИЗОВ</b>\n\n"
+    for p in prizes:
+        active = "✅" if p.get('is_active', True) else "❌"
+        qty = f"{p.get('remaining_quantity', -1)}/{p.get('total_quantity', -1)}" if p.get('total_quantity', -1) > 0 else "∞"
+        text += f"{active} <b>{p['name']}</b>\n"
+        text += f"   🏢 {p['partner']} | {p['category']}\n"
+        text += f"   💰 {p['value']} | 🎫 {p.get('promo_code', '—')}\n"
+        text += f"   📦 Осталось: {qty}\n\n"
+    
+    await message.answer(text, parse_mode="HTML")
+
+
+@dp.message_handler(Command("add_prize"))
+async def cmd_add_prize(message: types.Message):
+    """Добавить приз: /add_prize Название | Партнёр | Тип | Ценность | Категория"""
+    if not is_admin(message.from_user.id):
+        return
+    
+    args = message.get_args()
+    if not args:
+        await message.answer(
+            "❌ Формат: /add_prize Название | Партнёр | Тип | Ценность | Категория\n\n"
+            "Типы: discount, gift, slot, merch, service\n"
+            "Категории: general, nutrition, gear, recovery, event\n\n"
+            "Пример: /add_prize Скидка 20% | FitKit | discount | 20% | nutrition"
+        )
+        return
+    
+    parts = [p.strip() for p in args.split('|')]
+    if len(parts) < 4:
+        await message.answer("❌ Неверный формат. Нужно минимум 4 части через |")
+        return
+    
+    name, partner, prize_type, value = parts[:4]
+    category = parts[4] if len(parts) > 4 else 'general'
+    
+    import random
+    import string
+    promo_code = f"LETSKI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+    
+    from bot.utils.supabase import create_prize
+    prize = await create_prize(name, partner, prize_type, value, category, promo_code)
+    
+    if prize:
+        await message.answer(
+            f"✅ Приз добавлен!\n\n"
+            f"🎁 {name}\n"
+            f"🏢 {partner}\n"
+            f"📦 Тип: {prize_type}\n"
+            f"💰 Ценность: {value}\n"
+            f"🎫 Промокод: {promo_code}"
+        )
+    else:
+        await message.answer("❌ Ошибка при добавлении приза")
+
+
+@dp.message_handler(Command("toggle_prize"))
+async def cmd_toggle_prize(message: types.Message):
+    """Включить/выключить приз: /toggle_prize ID_ПРИЗА"""
+    if not is_admin(message.from_user.id):
+        return
+    
+    args = message.get_args()
+    if not args:
+        await message.answer("❌ Укажи ID приза: /toggle_prize UUID")
+        return
+    
+    prize_id = args.strip()
+    
+    from bot.utils.supabase import toggle_prize_active
+    result = await toggle_prize_active(prize_id)
+    
+    if result:
+        status = "активирован ✅" if result['is_active'] else "деактивирован ❌"
+        await message.answer(f"Приз {result['name']} {status}")
+    else:
+        await message.answer("❌ Приз не найден")
