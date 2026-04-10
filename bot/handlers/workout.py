@@ -1,16 +1,15 @@
 import re
-import hashlib
 from datetime import date
 from aiogram import types
 from aiogram.dispatcher.filters import Command
 
 from flask_app import dp, telegram_bot
-from config import MAIN_CHAT_ID, STREAK_BADGES, ADMIN_IDS
+from config import MAIN_CHAT_ID, ADMIN_IDS
 from bot.utils.supabase import (
     get_profile, get_sunday_schedule, create_workout,
-    get_random_prize_for_user, award_prize, update_workout_repost,
-    get_all_coaches, create_sunday_schedule as create_schedule,
-    supabase
+    update_workout_repost, get_all_coaches,
+    create_sunday_schedule as create_schedule,
+    supabase, check_and_award_badges, check_and_award_prize
 )
 from bot.keyboards.inline import get_rating_keyboard
 from bot.utils.helpers import calculate_pace, format_pace
@@ -54,7 +53,7 @@ async def handle_workout_photo(message: types.Message):
         return
     processed_messages.add(msg_id)
     
-    # Очищаем старые сообщения из кэша (чтобы не рос бесконечно)
+    # Очищаем старые сообщения из кэша
     if len(processed_messages) > 100:
         processed_messages.clear()
     
@@ -121,12 +120,16 @@ async def handle_workout_photo(message: types.Message):
     coach_name = schedule.get("coaches", {}).get("full_name", "Неизвестный тренер")
     pace = calculate_pace(parsed["km"], parsed["min"])
     
+    # Определяем тип тренировки (тестовая или обычная)
+    is_test = is_admin(user_id)
+    test_prefix = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n" if is_test else ""
+    
     try:
         group_message = await telegram_bot.send_photo(
             chat_id=MAIN_CHAT_ID,
             photo=message.photo[-1].file_id,
             caption=(
-                f"🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n"
+                f"{test_prefix}"
                 f"✅ <b>Тренировка принята!</b>\n\n"
                 f"👤 {profile['full_name']}\n"
                 f"👟 Тренер: {coach_name}\n"
@@ -142,8 +145,9 @@ async def handle_workout_photo(message: types.Message):
     except Exception as e:
         print(f"⚠️ Не удалось отправить в общий чат: {e}")
     
+    # Ответ пользователю
     response_text = (
-        f"🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n"
+        f"{'🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n' if is_test else '✅ <b>ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n'}"
         f"📊 {parsed['km']} км / {parsed['min']} мин\n"
         f"⚡️ Темп: {format_pace(pace)} мин/км\n"
         f"🔥 Текущая серия: {new_streak} воскресений\n"
@@ -151,61 +155,58 @@ async def handle_workout_photo(message: types.Message):
         f"📏 Всего км: {total_km}\n"
     )
     
-    # ========== ПРОВЕРЯЕМ БЕЙДЖИ И ПРИЗЫ ==========
-    # Бейдж за первую тренировку
-    if total_sundays == 1:
-        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", "first_workout").execute()
-        if not existing.data:
-            supabase.table("badges").insert({
-                "user_id": profile["id"],
-                "badge_type": "first_workout",
-                "awarded_at": "now()"
-            }).execute()
-            response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🚀 Первый шаг\n"
+    # ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА БЕЙДЖЕЙ ==========
+    stats = {
+        'total_workouts': total_sundays,
+        'total_km': total_km,
+        'streak': new_streak,
+    }
     
-    # Бейджи и призы за серии (4, 8, 12)
-    if new_streak in STREAK_BADGES:
-        badge_type = STREAK_BADGES[new_streak]
+    awarded_badges = await check_and_award_badges(profile["id"], stats)
+    
+    for badge in awarded_badges:
+        # В личку
+        response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n{badge['emoji']} {badge['name']}\n"
         
-        # Бейдж
-        existing_badge = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", badge_type).execute()
-        if not existing_badge.data:
-            supabase.table("badges").insert({
-                "user_id": profile["id"],
-                "badge_type": badge_type,
-                "awarded_at": "now()"
-            }).execute()
-            response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🔥 Серия {new_streak} тренировок!\n"
+        # В общий чат
+        compliment = badge.get('compliment', 'Поздравляем!')
+        try:
+            await telegram_bot.send_message(
+                chat_id=MAIN_CHAT_ID,
+                text=(
+                    f"🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n\n"
+                    f"👤 {profile['full_name']}\n"
+                    f"{badge['emoji']} <b>{badge['name']}</b>\n"
+                    f"📋 {badge.get('description', '')}\n\n"
+                    f"💬 {compliment}"
+                ),
+                parse_mode="HTML"
+            )
+        except Exception as e:
+            print(f"⚠️ Не удалось отправить уведомление о бейдже в чат: {e}")
+    
+    # ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА ПРИЗОВ ==========
+    prize, level_name = await check_and_award_prize(profile["id"], total_sundays)
+    
+    if prize:
+        # В личку
+        response_text += f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n{prize['name']} ({level_name} уровень)\n"
         
-        # Приз (выдаётся независимо от бейджа)
-        existing_prize = supabase.table("user_prizes").select("*").eq("user_id", profile["id"]).eq("awarded_for", f"streak_{new_streak}").execute()
-        if not existing_prize.data:
-            prize = await get_random_prize_for_user(profile["id"])
-            if prize:
-                await award_prize(profile["id"], prize["id"], f"streak_{new_streak}")
-                response_text += f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n{prize['name']}\n"
-    
-    # Бейдж за 100 км
-    if total_km >= 100:
-        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", "km_100").execute()
-        if not existing.data:
-            supabase.table("badges").insert({
-                "user_id": profile["id"],
-                "badge_type": "km_100",
-                "awarded_at": "now()"
-            }).execute()
-            response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🏆 100 км\n"
-    
-    # Бейдж за 500 км
-    if total_km >= 500:
-        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", "km_500").execute()
-        if not existing.data:
-            supabase.table("badges").insert({
-                "user_id": profile["id"],
-                "badge_type": "km_500",
-                "awarded_at": "now()"
-            }).execute()
-            response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n👑 500 км\n"
+        # В общий чат
+        try:
+            await telegram_bot.send_message(
+                chat_id=MAIN_CHAT_ID,
+                text=(
+                    f"🎁 <b>ВЫДАН ПРИЗ!</b>\n\n"
+                    f"👤 {profile['full_name']}\n"
+                    f"🏆 {prize['name']}\n"
+                    f"🏢 {prize.get('partner', 'Letski School')}\n"
+                    f"📊 Уровень: {level_name} ({total_sundays} тренировок)"
+                ),
+                parse_mode="HTML"
+            )
+        except Exception as e:
+            print(f"⚠️ Не удалось отправить уведомление о призе в чат: {e}")
     
     await message.reply(response_text, parse_mode="HTML")
     
@@ -218,7 +219,10 @@ async def handle_workout_photo(message: types.Message):
 
 @dp.message_handler(Command("check_sunday"))
 async def cmd_check_sunday(message: types.Message):
-    await message.answer("🧪 Тестовый режим: можно отправлять тренировки в любой день!")
+    if is_admin(message.from_user.id):
+        await message.answer("👑 Админский режим: можно отправлять тренировки в любой день!")
+    else:
+        await message.answer("ℹ️ Обычные пользователи могут отправлять тренировки только по воскресеньям.")
 
 
 @dp.message_handler(Command("clear_cache"))
