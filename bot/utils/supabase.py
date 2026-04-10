@@ -278,3 +278,18 @@ async def create_prize_with_link(name: str, partner: str, prize_type: str, value
     
     result = supabase.table("prizes_pool").insert(data).execute()
     return result.data[0] if result.data else None
+    
+async def get_workouts_by_telegram_id(telegram_id: int):
+    """Получить все тренировки пользователя по telegram_id"""
+    # Сначала получаем profile_id
+    profile = await get_profile(telegram_id)
+    if not profile:
+        return []
+    
+    result = supabase.table("workouts")\
+        .select("*")\
+        .eq("user_id", profile["id"])\
+        .order("sunday_date", desc=True)\
+        .execute()
+    
+    return result.data if result.data else []
