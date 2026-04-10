@@ -88,14 +88,6 @@ async def handle_workout_photo(message: types.Message):
     current_streak = profile.get("sunday_streak", 0) or 0
     new_streak = current_streak + 1
     
-    # Обновляем серию в профиле
-    supabase.table("profiles").update({
-        "sunday_streak": new_streak,
-        "max_sunday_streak": max(new_streak, profile.get("max_sunday_streak", 0) or 0),
-        "total_sundays": (profile.get("total_sundays", 0) or 0) + 1,
-        "total_km": (profile.get("total_km", 0) or 0) + parsed["km"]
-    }).eq("id", profile["id"]).execute()
-    
     # Сохраняем тренировку
     workout = await create_workout(
         user_id=profile["id"],
@@ -109,6 +101,11 @@ async def handle_workout_photo(message: types.Message):
     if not workout:
         await message.reply("❌ Ошибка при сохранении тренировки.")
         return
+    
+    # ========== ПОЛУЧАЕМ ОБНОВЛЁННЫЙ ПРОФИЛЬ (триггеры уже сработали) ==========
+    updated_profile = await get_profile(user_id)
+    new_streak = updated_profile.get("sunday_streak", 0) or 0
+    total_km = updated_profile.get("total_km", 0) or 0
     
     # Публикуем в общий чат
     coach_name = schedule.get("coaches", {}).get("full_name", "Неизвестный тренер")
@@ -125,7 +122,7 @@ async def handle_workout_photo(message: types.Message):
             f"📏 Дистанция: {parsed['km']} км\n"
             f"⏱ Время: {parsed['min']} мин\n"
             f"⚡️ Темп: {format_pace(pace)} мин/км\n"
-            f"🔥 Серия: {new_streak} тренировок\n\n"
+            f"🔥 Серия: {new_streak} воскресений\n\n"
             f"#km{parsed['km']} #min{parsed['min']}"
         ),
         parse_mode="HTML"
@@ -137,8 +134,11 @@ async def handle_workout_photo(message: types.Message):
         f"🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n"
         f"📊 {parsed['km']} км / {parsed['min']} мин\n"
         f"⚡️ Темп: {format_pace(pace)} мин/км\n"
-        f"🔥 Текущая серия: {new_streak} тренировок\n"
+        f"🔥 Текущая серия: {new_streak} воскресений\n"
     )
+
+# ========== ПРОВЕРЯЕМ БЕЙДЖИ И ПРИЗЫ ==========
+# (используем updated_profile и new_streak)
     
     # ========== ПРОВЕРЯЕМ БЕЙДЖИ И ПРИЗЫ ==========
     # Бейдж за первую тренировку
