@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Letski school</title>
+    <title>Letski Club</title>
     
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Шрифт Onest (похож на тот, что на сайте) -->
+    <!-- Шрифт Onest -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,7 +28,6 @@
             padding-bottom: 90px;
         }
 
-        /* Контейнер */
         .container {
             max-width: 480px;
             margin: 0 auto;
@@ -202,11 +201,6 @@
             margin-bottom: 2px;
         }
 
-        .badge-info p {
-            font-size: 12px;
-            color: #666;
-        }
-
         /* Призы */
         .prize-item {
             background: rgba(255, 255, 255, 0.9);
@@ -219,6 +213,18 @@
             gap: 14px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 215, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .prize-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            border-color: #FFD700;
+        }
+
+        .prize-item:active {
+            transform: translateY(0);
         }
 
         .prize-emoji {
@@ -254,6 +260,18 @@
         .prize-status.claimed {
             background: linear-gradient(135deg, #00C853, #00A844);
             color: white;
+        }
+
+        .prize-arrow {
+            font-size: 20px;
+            opacity: 0.5;
+            transition: all 0.2s;
+            margin-left: 4px;
+        }
+
+        .prize-item:hover .prize-arrow {
+            opacity: 1;
+            transform: translateX(4px);
         }
 
         /* Табы рейтинга */
@@ -422,14 +440,11 @@
         }
 
         /* Правила */
-        .rules-content {
-            color: #1a1a2e;
-        }
-
         .rules-content h2 {
             margin-bottom: 24px;
             font-size: 24px;
             font-weight: 800;
+            color: #1a1a2e;
         }
 
         .rules-content h3 {
@@ -444,6 +459,20 @@
             line-height: 1.6;
             margin-bottom: 8px;
         }
+
+        .rules-link {
+            color: #1e3c72;
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px dashed #1e3c72;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -451,29 +480,29 @@
         <!-- ПРОФИЛЬ -->
         <div id="page-profile" class="page active">
             <div class="header">
-                <div class="logo">LETSKI<span>school</span></div>
+                <div class="logo">LETSKI<span>club</span></div>
             </div>
             
             <div class="card">
                 <div class="profile-header">
-                    <div class="avatar" id="user-avatar">Б</div>
+                    <div class="avatar" id="user-avatar">Л</div>
                     <div class="profile-info">
-                        <h2 id="user-name">Богдан</h2>
-                        <span class="streak-badge" id="user-streak">🔥 4 воскресенья</span>
+                        <h2 id="user-name">Загрузка...</h2>
+                        <span class="streak-badge" id="user-streak">🔥 0 воскресений</span>
                     </div>
                 </div>
                 
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-value" id="stat-workouts">12</div>
+                        <div class="stat-value" id="stat-workouts">0</div>
                         <div class="stat-label">тренировок</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="stat-km">120</div>
+                        <div class="stat-value" id="stat-km">0</div>
                         <div class="stat-label">километров</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="stat-pace">5:30</div>
+                        <div class="stat-value" id="stat-pace">—</div>
                         <div class="stat-label">средний темп</div>
                     </div>
                 </div>
@@ -482,31 +511,37 @@
             <div class="section">
                 <div class="section-title">
                     <h3>🏅 Бейджи</h3>
-                    <span id="badges-count">4</span>
+                    <span id="badges-count">0</span>
                 </div>
-                <div class="badges-container" id="badges-list"></div>
+                <div class="badges-container" id="badges-list">
+                    <div class="empty-state">Пока нет бейджей</div>
+                </div>
             </div>
             
             <div class="section">
                 <div class="section-title">
                     <h3>🎁 Твои призы</h3>
-                    <span id="prizes-count">2</span>
+                    <span id="prizes-count">0</span>
                 </div>
-                <div id="prizes-list"></div>
+                <div id="prizes-list">
+                    <div class="empty-state">Пока нет призов</div>
+                </div>
             </div>
             
             <div class="section">
                 <div class="section-title">
                     <h3>📊 Последние тренировки</h3>
                 </div>
-                <div class="card" id="recent-workouts" style="padding: 8px 20px;"></div>
+                <div class="card" id="recent-workouts" style="padding: 8px 20px;">
+                    <div class="empty-state">Нет тренировок</div>
+                </div>
             </div>
         </div>
         
         <!-- РЕЙТИНГ -->
         <div id="page-rating" class="page">
             <div class="header">
-                <div class="logo">LETSKI<span>school</span></div>
+                <div class="logo">LETSKI<span>club</span></div>
             </div>
             
             <div class="rating-tabs">
@@ -523,7 +558,7 @@
         <!-- ПРИЗЫ -->
         <div id="page-prizes" class="page">
             <div class="header">
-                <div class="logo">LETSKI<span>school</span></div>
+                <div class="logo">LETSKI<span>club</span></div>
             </div>
             
             <div class="section">
@@ -540,7 +575,7 @@
         <!-- ПРАВИЛА -->
         <div id="page-rules" class="page">
             <div class="header">
-                <div class="logo">LETSKI<span>school</span></div>
+                <div class="logo">LETSKI<span>club</span></div>
             </div>
             
             <div class="card rules-content">
@@ -577,7 +612,7 @@
                 
                 <div>
                     <h3>❓ Вопросы?</h3>
-                    <p>Пиши администратору: @Stroitelev_Fedor</p>
+                    <p>Пиши администратору: <a href="https://t.me/Stroitelev_Fedor" class="rules-link">@Stroitelev_Fedor</a></p>
                 </div>
             </div>
         </div>
@@ -608,7 +643,6 @@
         tg.expand();
         tg.ready();
         
-        // ID пользователя
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
         const API_BASE = window.location.origin;
@@ -647,132 +681,235 @@
             });
         });
         
+        // Эмодзи и названия бейджей
+        const badgeEmojis = {
+            'first_workout': '🚀', 'streak_4': '🔥', 'streak_8': '🔥🔥', 
+            'streak_12': '🔥🔥🔥', 'km_100': '🏆', 'km_500': '👑', 
+            'km_1000': '💎', 'workouts_10': '💪', 'workouts_25': '🦾',
+            'workouts_50': '🏅', 'early_bird': '🌅', 'night_owl': '🌙',
+            'fast_pace': '⚡'
+        };
+        
+        const badgeNames = {
+            'first_workout': 'Первый шаг', 'streak_4': 'Серия 4', 
+            'streak_8': 'Серия 8', 'streak_12': 'Серия 12', 
+            'km_100': '100 км', 'km_500': '500 км', 'km_1000': '1000 км',
+            'workouts_10': '10 тренировок', 'workouts_25': '25 тренировок',
+            'workouts_50': '50 тренировок', 'early_bird': 'Жаворонок',
+            'night_owl': 'Сова', 'fast_pace': 'Спринтер'
+        };
+        
         // Загрузка профиля
         async function loadProfile() {
-            if (!userId) return;
+            if (!userId) {
+                document.getElementById('user-name').textContent = 'Гость';
+                return;
+            }
             
             try {
                 const response = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
                 const data = await response.json();
                 
-                if (data.error) return;
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
                 
-                document.getElementById('user-name').textContent = data.full_name;
-                document.getElementById('user-avatar').textContent = data.full_name[0];
-                document.getElementById('user-streak').innerHTML = `🔥 ${data.sunday_streak} воскресенья`;
+                document.getElementById('user-name').textContent = data.full_name || 'Участник';
+                document.getElementById('user-avatar').textContent = (data.full_name || 'Л')[0];
+                document.getElementById('user-streak').innerHTML = `🔥 ${data.sunday_streak || 0} воскресений`;
                 document.getElementById('stat-workouts').textContent = data.total_sundays || 0;
                 document.getElementById('stat-km').textContent = data.total_km || 0;
                 
                 if (data.workouts && data.workouts.length > 0) {
-                    const avgPace = data.workouts.reduce((sum, w) => sum + w.pace, 0) / data.workouts.length;
+                    const avgPace = data.workouts.reduce((sum, w) => sum + (w.pace || 0), 0) / data.workouts.length;
                     const minutes = Math.floor(avgPace);
                     const seconds = Math.round((avgPace - minutes) * 60);
                     document.getElementById('stat-pace').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 }
                 
-                const badgeEmojis = {'first_workout':'🚀','streak_4':'🔥','streak_8':'🔥🔥','streak_12':'🔥🔥🔥','km_100':'🏆'};
-                const badgeNames = {'first_workout':'Первый шаг','streak_4':'Серия 4','streak_8':'Серия 8','streak_12':'Серия 12','km_100':'100 км'};
-                
-                document.getElementById('badges-list').innerHTML = data.badges.map(b => `
-                    <div class="badge">
-                        <span class="badge-emoji">${badgeEmojis[b.badge_type] || '🏅'}</span>
-                        <div class="badge-info"><h4>${badgeNames[b.badge_type] || b.badge_type}</h4></div>
-                    </div>
-                `).join('');
-                document.getElementById('badges-count').textContent = data.badges.length;
-                
-                const myPrizes = data.prizes || [];
-                document.getElementById('prizes-list').innerHTML = myPrizes.map(p => `
-                    <div class="prize-item">
-                        <span class="prize-emoji">🎁</span>
-                        <div class="prize-info">
-                            <h4>${p.prizes_pool?.name || 'Приз'}</h4>
-                            <p>${p.prizes_pool?.partner || ''}</p>
+                // Бейджи
+                const badgesList = document.getElementById('badges-list');
+                if (data.badges && data.badges.length > 0) {
+                    badgesList.innerHTML = data.badges.map(b => `
+                        <div class="badge">
+                            <span class="badge-emoji">${badgeEmojis[b.badge_type] || '🏅'}</span>
+                            <div class="badge-info"><h4>${badgeNames[b.badge_type] || b.badge_type}</h4></div>
                         </div>
-                        <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
-                    </div>
-                `).join('');
-                document.getElementById('prizes-count').textContent = myPrizes.length;
+                    `).join('');
+                    document.getElementById('badges-count').textContent = data.badges.length;
+                } else {
+                    badgesList.innerHTML = '<div class="empty-state">Пока нет бейджей</div>';
+                    document.getElementById('badges-count').textContent = '0';
+                }
                 
-                document.getElementById('recent-workouts').innerHTML = (data.workouts || []).map(w => `
-                    <div class="workout-item">
-                        <span class="workout-date">${new Date(w.sunday_date).toLocaleDateString('ru-RU')}</span>
-                        <span class="workout-data">${w.distance_km} км / ${w.duration_min} мин</span>
-                        <span class="workout-pace">${w.pace?.toFixed(2) || '—'} мин/км</span>
-                    </div>
-                `).join('');
+                // Призы
+                const prizesList = document.getElementById('prizes-list');
+                const myPrizes = data.prizes || [];
+                if (myPrizes.length > 0) {
+                    prizesList.innerHTML = myPrizes.map(p => {
+                        const prize = p.prizes_pool || {};
+                        const linkUrl = prize.link_url || '#';
+                        const hasLink = linkUrl && linkUrl !== '#';
+                        
+                        return `
+                            <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
+                                <span class="prize-emoji">🎁</span>
+                                <div class="prize-info">
+                                    <h4>${prize.name || 'Приз'}</h4>
+                                    <p>${prize.partner || ''}</p>
+                                </div>
+                                <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
+                                ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    document.getElementById('prizes-count').textContent = myPrizes.length;
+                } else {
+                    prizesList.innerHTML = '<div class="empty-state">Пока нет призов</div>';
+                    document.getElementById('prizes-count').textContent = '0';
+                }
+                
+                // Тренировки
+                const workoutsDiv = document.getElementById('recent-workouts');
+                if (data.workouts && data.workouts.length > 0) {
+                    workoutsDiv.innerHTML = data.workouts.slice(0, 5).map(w => `
+                        <div class="workout-item">
+                            <span class="workout-date">${new Date(w.sunday_date).toLocaleDateString('ru-RU')}</span>
+                            <span class="workout-data">${w.distance_km} км / ${w.duration_min} мин</span>
+                            <span class="workout-pace">${w.pace?.toFixed(2) || '—'} мин/км</span>
+                        </div>
+                    `).join('');
+                } else {
+                    workoutsDiv.innerHTML = '<div class="empty-state">Нет тренировок</div>';
+                }
                 
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('Ошибка загрузки профиля:', error);
             }
         }
         
+        // Загрузка рейтинга
         async function loadRating(type = 'km') {
             const container = document.getElementById('rating-list');
-            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            container.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
             
             try {
                 const response = await fetch(`${API_BASE}/api/rating?type=${type}`);
                 const data = await response.json();
                 const rating = data.rating || [];
+                
+                if (rating.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Нет данных для рейтинга</div>';
+                    return;
+                }
+                
                 const medals = ['🥇', '🥈', '🥉'];
                 const labels = { km: 'км', workouts: 'тр', streak: 'нед' };
                 
-                let currentUserId = userId;
-                if (currentUserId) {
-                    const profileResponse = await fetch(`${API_BASE}/api/profile?user_id=${currentUserId}`);
+                let currentUserId = null;
+                if (userId) {
+                    const profileResponse = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
                     const profileData = await profileResponse.json();
                     currentUserId = profileData.id;
                 }
                 
                 container.innerHTML = rating.map(r => {
                     const isCurrent = r.id === currentUserId;
-                    let value = type === 'km' ? r.total_km : (type === 'workouts' ? r.total_sundays : r.sunday_streak);
+                    let value;
+                    if (type === 'km') value = r.total_km || 0;
+                    else if (type === 'workouts') value = r.total_sundays || 0;
+                    else value = r.sunday_streak || 0;
+                    
                     return `
                         <div class="rating-item ${isCurrent ? 'current-user' : ''}">
                             <span class="rating-place">${r.place <= 3 ? medals[r.place-1] : r.place}</span>
-                            <span class="rating-user">${r.full_name}</span>
-                            <span class="rating-value">${value || 0} ${labels[type]}</span>
+                            <span class="rating-user">${r.full_name || 'Участник'}</span>
+                            <span class="rating-value">${value} ${labels[type]}</span>
                         </div>
                     `;
                 }).join('');
+                
             } catch (error) {
+                console.error('Ошибка загрузки рейтинга:', error);
                 container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
         
+        // Загрузка призов
         async function loadPrizes() {
+            const availableContainer = document.getElementById('available-prizes-list');
+            const myContainer = document.getElementById('my-prizes-list');
+            
             try {
                 const response = await fetch(`${API_BASE}/api/prizes?user_id=${userId}`);
                 const data = await response.json();
                 
-                document.getElementById('available-prizes-list').innerHTML = data.available.map(p => `
-                    <div class="prize-item">
-                        <span class="prize-emoji">🎁</span>
-                        <div class="prize-info">
-                            <h4>${p.name}</h4>
-                            <p>${p.partner} · ${p.description || ''}</p>
-                        </div>
-                    </div>
-                `).join('');
+                // Доступные призы
+                if (data.available && data.available.length > 0) {
+                    availableContainer.innerHTML = data.available.map(p => {
+                        const linkUrl = p.link_url || '#';
+                        const hasLink = linkUrl && linkUrl !== '#';
+                        
+                        return `
+                            <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
+                                <span class="prize-emoji">🎁</span>
+                                <div class="prize-info">
+                                    <h4>${p.name}</h4>
+                                    <p>${p.partner || ''} · ${p.description || ''}</p>
+                                </div>
+                                ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    availableContainer.innerHTML = '<div class="empty-state">Нет доступных призов</div>';
+                }
                 
-                document.getElementById('my-prizes-list').innerHTML = data.my.map(p => `
-                    <div class="prize-item">
-                        <span class="prize-emoji">✅</span>
-                        <div class="prize-info">
-                            <h4>${p.prizes_pool?.name || 'Приз'}</h4>
-                            <p>${p.prizes_pool?.partner || ''}</p>
-                        </div>
-                        <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
-                    </div>
-                `).join('');
+                // Мои призы
+                if (data.my && data.my.length > 0) {
+                    myContainer.innerHTML = data.my.map(p => {
+                        const prize = p.prizes_pool || {};
+                        const linkUrl = prize.link_url || '#';
+                        const hasLink = linkUrl && linkUrl !== '#';
+                        
+                        return `
+                            <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
+                                <span class="prize-emoji">✅</span>
+                                <div class="prize-info">
+                                    <h4>${prize.name || 'Приз'}</h4>
+                                    <p>${prize.partner || ''}</p>
+                                </div>
+                                <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
+                                ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    myContainer.innerHTML = '<div class="empty-state">У тебя пока нет призов</div>';
+                }
+                
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('Ошибка загрузки призов:', error);
+                availableContainer.innerHTML = '<div class="loading">Ошибка загрузки</div>';
+                myContainer.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
         
+        // Загрузка при старте
         loadProfile();
-        tg.BackButton.onClick(() => document.querySelector('.nav-item[data-page="profile"]').click());
+        
+        // Кнопка "Назад" в Telegram
+        tg.BackButton.onClick(() => {
+            document.querySelector('.nav-item[data-page="profile"]').click();
+        });
+        
+        // Обработка ошибок изображений
+        window.addEventListener('error', (e) => {
+            if (e.target.tagName === 'IMG') {
+                e.target.style.display = 'none';
+            }
+        }, true);
     </script>
 </body>
 </html>
