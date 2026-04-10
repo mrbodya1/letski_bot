@@ -146,8 +146,13 @@ async def handle_workout_photo(message: types.Message):
         print(f"⚠️ Не удалось отправить в общий чат: {e}")
     
     # Ответ пользователю
+    if is_test:
+        title = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>"
+    else:
+        title = "✅ <b>ТРЕНИРОВКА ЗАПИСАНА!</b>"
+    
     response_text = (
-        f"{'🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n' if is_test else '✅ <b>ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n'}"
+        f"{title}\n\n"
         f"📊 {parsed['km']} км / {parsed['min']} мин\n"
         f"⚡️ Темп: {format_pace(pace)} мин/км\n"
         f"🔥 Текущая серия: {new_streak} воскресений\n"
