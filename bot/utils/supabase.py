@@ -296,19 +296,14 @@ async def get_workouts_by_telegram_id(telegram_id: int):
 
 # ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА БЕЙДЖЕЙ ==========
 async def check_and_award_badges(user_id: str, stats: dict):
-    """
-    Универсальная проверка и выдача бейджей.
-    stats = {'total_workouts': 5, 'total_km': 120, 'streak': 4}
-    Возвращает список выданных бейджей.
-    """
-    # Получаем все активные бейджи из каталога
-    catalog = supabase.table("badges_catalog").select("*").eq("is_active", True).execute()
-    if not catalog.data:
-        return []
+    print(f"🔍 Проверяем бейджи для user={user_id}, stats={stats}")
     
-    # Получаем уже выданные бейджи пользователя
+    catalog = supabase.table("badges_catalog").select("*").eq("is_active", True).execute()
+    print(f"📦 Найдено бейджей в каталоге: {len(catalog.data) if catalog.data else 0}")
+    
     earned = supabase.table("badges").select("badge_type").eq("user_id", user_id).execute()
     earned_types = {b['badge_type'] for b in earned.data} if earned.data else set()
+    print(f"✅ Уже есть бейджи: {earned_types}")
     
     awarded = []
     
@@ -318,19 +313,17 @@ async def check_and_award_badges(user_id: str, stats: dict):
         
         should_award = False
         
-        trigger_type = badge.get('trigger_type')
-        trigger_value = badge.get('trigger_value')
-        
-        if trigger_type == 'first_workout' and stats.get('total_workouts', 0) >= 1:
+        if badge['trigger_type'] == 'first_workout' and stats.get('total_workouts', 0) >= 1:
             should_award = True
-        elif trigger_type == 'streak' and stats.get('streak', 0) >= trigger_value:
+        elif badge['trigger_type'] == 'streak' and stats.get('streak', 0) >= badge['trigger_value']:
             should_award = True
-        elif trigger_type == 'total_km' and stats.get('total_km', 0) >= trigger_value:
+        elif badge['trigger_type'] == 'total_km' and stats.get('total_km', 0) >= badge['trigger_value']:
             should_award = True
-        elif trigger_type == 'total_workouts' and stats.get('total_workouts', 0) >= trigger_value:
+        elif badge['trigger_type'] == 'total_workouts' and stats.get('total_workouts', 0) >= badge['trigger_value']:
             should_award = True
         
         if should_award:
+            print(f"🎁 Выдаём бейдж: {badge['name']}")
             supabase.table("badges").insert({
                 "user_id": user_id,
                 "badge_type": badge['badge_type'],
@@ -338,6 +331,7 @@ async def check_and_award_badges(user_id: str, stats: dict):
             }).execute()
             awarded.append(badge)
     
+    print(f"🏅 Всего выдано бейджей: {len(awarded)}")
     return awarded
 
 
