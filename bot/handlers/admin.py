@@ -273,17 +273,17 @@ async def cmd_prizes_list(message: types.Message):
 
 @dp.message_handler(Command("add_prize"))
 async def cmd_add_prize(message: types.Message):
-    """Добавить приз: /add_prize Название | Партнёр | Тип | Ценность | Категория"""
+    """Добавить приз: /add_prize Название | Партнёр | Тип | Ценность | Категория | Ссылка"""
     if not is_admin(message.from_user.id):
         return
     
     args = message.get_args()
     if not args:
         await message.answer(
-            "❌ Формат: /add_prize Название | Партнёр | Тип | Ценность | Категория\n\n"
+            "❌ Формат: /add_prize Название | Партнёр | Тип | Ценность | Категория | Ссылка\n\n"
             "Типы: discount, gift, slot, merch, service\n"
-            "Категории: general, nutrition, gear, recovery, event\n\n"
-            "Пример: /add_prize Скидка 20% | FitKit | discount | 20% | nutrition"
+            "Категории: nutrition, gear, event, recovery, merch, service, general\n\n"
+            "Пример: /add_prize Скидка 20% | FitKit | discount | 20% | nutrition | https://fitkit.ru"
         )
         return
     
@@ -292,15 +292,19 @@ async def cmd_add_prize(message: types.Message):
         await message.answer("❌ Неверный формат. Нужно минимум 4 части через |")
         return
     
-    name, partner, prize_type, value = parts[:4]
+    name = parts[0]
+    partner = parts[1] if len(parts) > 1 else ''
+    prize_type = parts[2] if len(parts) > 2 else 'gift'
+    value = parts[3] if len(parts) > 3 else ''
     category = parts[4] if len(parts) > 4 else 'general'
+    link_url = parts[5] if len(parts) > 5 else None
     
     import random
     import string
     promo_code = f"LETSKI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
     
-    from bot.utils.supabase import create_prize
-    prize = await create_prize(name, partner, prize_type, value, category, promo_code)
+    from bot.utils.supabase import create_prize_with_link
+    prize = await create_prize_with_link(name, partner, prize_type, value, category, promo_code, link_url)
     
     if prize:
         await message.answer(
@@ -309,7 +313,8 @@ async def cmd_add_prize(message: types.Message):
             f"🏢 {partner}\n"
             f"📦 Тип: {prize_type}\n"
             f"💰 Ценность: {value}\n"
-            f"🎫 Промокод: {promo_code}"
+            f"🎫 Промокод: {promo_code}\n"
+            f"🔗 Ссылка: {link_url or 'не указана'}"
         )
     else:
         await message.answer("❌ Ошибка при добавлении приза")
