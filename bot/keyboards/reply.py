@@ -18,7 +18,6 @@ def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📊 Мой профиль")],
-            [KeyboardButton(text="📱 Открыть приложение")],
             [KeyboardButton(text="ℹ️ Помощь")]
         ],
         resize_keyboard=True
