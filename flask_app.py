@@ -84,30 +84,40 @@ def api_profile():
     if not user_id:
         return {"error": "user_id required"}, 400
     
-    # Запускаем асинхронную функцию
     async def get_data():
-        from bot.utils.supabase import get_profile, get_user_badges, get_user_prizes, get_workouts_by_telegram_id
-        
-        profile = await get_profile(int(user_id))
-        if not profile:
-            return {"error": "Profile not found"}, 404
-        
-        badges = await get_user_badges(profile["id"])
-        prizes = await get_user_prizes(profile["id"])
-        workouts = await get_workouts_by_telegram_id(int(user_id))
-        
-        # Формируем ответ
-        return {
-            "full_name": profile["full_name"],
-            "gender": profile["gender"],
-            "sunday_streak": profile["sunday_streak"],
-            "max_sunday_streak": profile["max_sunday_streak"],
-            "total_sundays": profile["total_sundays"],
-            "total_km": profile["total_km"],
-            "badges": badges,
-            "prizes": prizes,
-            "workouts": workouts[:5]  # последние 5 тренировок
-        }
+        try:
+            from bot.utils.supabase import get_profile, get_user_badges, get_user_prizes, get_workouts_by_telegram_id
+            
+            profile = await get_profile(int(user_id))
+            if not profile:
+                return {"error": "Profile not found"}, 404
+            
+            badges = await get_user_badges(profile["id"])
+            prizes = await get_user_prizes(profile["id"])
+            workouts = await get_workouts_by_telegram_id(int(user_id))
+            
+            # Вычисляем pace для каждой тренировки
+            for w in workouts:
+                if w.get('distance_km') and w.get('duration_min'):
+                    w['pace'] = w['duration_min'] / w['distance_km']
+                else:
+                    w['pace'] = 0
+            
+            return {
+                "id": profile["id"],
+                "full_name": profile["full_name"],
+                "gender": profile["gender"],
+                "sunday_streak": profile["sunday_streak"] or 0,
+                "max_sunday_streak": profile["max_sunday_streak"] or 0,
+                "total_sundays": profile["total_sundays"] or 0,
+                "total_km": profile["total_km"] or 0,
+                "badges": badges or [],
+                "prizes": prizes or [],
+                "workouts": workouts or []
+            }
+        except Exception as e:
+            logger.error(f"Error in api_profile: {e}")
+            return {"error": str(e)}, 500
     
     result = asyncio.run(get_data())
     return result
@@ -154,6 +164,17 @@ def api_prizes():
                 return {"available": available, "my": my_prizes}
         
         return {"available": all_prizes, "my": []}
+    
+    result = asyncio.run(get_data())
+    return result
+
+@app.route('/api/badges_catalog')
+def api_badges_catalog():
+    """API для получения каталога всех бейджей"""
+    async def get_data():
+        from bot.utils.supabase import get_badges_catalog
+        badges = await get_badges_catalog()
+        return {"badges": badges}
     
     result = asyncio.run(get_data())
     return result
