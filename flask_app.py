@@ -96,7 +96,6 @@ def api_profile():
             prizes = await get_user_prizes(profile["id"])
             workouts = await get_workouts_by_telegram_id(int(user_id))
             
-            # Вычисляем pace для каждой тренировки
             for w in workouts:
                 if w.get('distance_km') and w.get('duration_min'):
                     w['pace'] = w['duration_min'] / w['distance_km']
@@ -107,10 +106,10 @@ def api_profile():
                 "id": profile["id"],
                 "full_name": profile["full_name"],
                 "gender": profile["gender"],
-                "sunday_streak": profile["sunday_streak"] or 0,
-                "max_sunday_streak": profile["max_sunday_streak"] or 0,
-                "total_sundays": profile["total_sundays"] or 0,
-                "total_km": profile["total_km"] or 0,
+                "sunday_streak": profile.get("sunday_streak", 0) or 0,
+                "max_sunday_streak": profile.get("max_sunday_streak", 0) or 0,
+                "total_sundays": profile.get("total_sundays", 0) or 0,
+                "total_km": profile.get("total_km", 0) or 0,
                 "badges": badges or [],
                 "prizes": prizes or [],
                 "workouts": workouts or []
@@ -118,6 +117,18 @@ def api_profile():
         except Exception as e:
             logger.error(f"Error in api_profile: {e}")
             return {"error": str(e)}, 500
+    
+    result = asyncio.run(get_data())
+    return result
+
+
+@app.route('/api/badges_catalog')
+def api_badges_catalog():
+    """API для получения каталога всех бейджей"""
+    async def get_data():
+        from bot.utils.supabase import get_badges_catalog
+        badges = await get_badges_catalog()
+        return {"badges": badges or []}
     
     result = asyncio.run(get_data())
     return result
@@ -141,7 +152,7 @@ def api_rating():
             return []
     
     result = asyncio.run(get_data())
-    return {"rating": result}
+    return {"rating": result or []}
 
 
 @app.route('/api/prizes')
@@ -158,23 +169,12 @@ def api_prizes():
             profile = await get_profile(int(user_id))
             if profile:
                 my_prizes = await get_user_prizes(profile["id"])
-                my_prize_ids = [p["prize_id"] for p in my_prizes]
+                my_prize_ids = [p["prize_id"] for p in my_prizes] if my_prizes else []
                 
-                available = [p for p in all_prizes if p["id"] not in my_prize_ids]
-                return {"available": available, "my": my_prizes}
+                available = [p for p in all_prizes if p["id"] not in my_prize_ids] if all_prizes else []
+                return {"available": available, "my": my_prizes or []}
         
-        return {"available": all_prizes, "my": []}
-    
-    result = asyncio.run(get_data())
-    return result
-
-@app.route('/api/badges_catalog')
-def api_badges_catalog():
-    """API для получения каталога всех бейджей"""
-    async def get_data():
-        from bot.utils.supabase import get_badges_catalog
-        badges = await get_badges_catalog()
-        return {"badges": badges}
+        return {"available": all_prizes or [], "my": []}
     
     result = asyncio.run(get_data())
     return result
