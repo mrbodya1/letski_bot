@@ -262,3 +262,19 @@ async def get_rating_by_streak():
     """Рейтинг по серии"""
     result = supabase.table("rating_by_streak").select("*").limit(50).execute()
     return result.data if result.data else []
+
+async def create_prize_with_link(name: str, partner: str, prize_type: str, value: str, category: str, promo_code: str, link_url: str = None):
+    """Создать новый приз со ссылкой"""
+    data = {
+        "name": name,
+        "partner": partner,
+        "type": prize_type,
+        "value": value,
+        "category": category,
+        "promo_code": promo_code
+    }
+    if link_url:
+        data["link_url"] = link_url
+    
+    result = supabase.table("prizes_pool").insert(data).execute()
+    return result.data[0] if result.data else None
