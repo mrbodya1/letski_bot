@@ -600,217 +600,230 @@
     </div>
 
     <script>
-        // Инициализация Telegram Web App
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
-        
-        // Установка цветов из темы Telegram
-        document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color || '#FAFAFA');
-        document.documentElement.style.setProperty('--card', tg.themeParams.secondary_bg_color || '#FFFFFF');
-        document.documentElement.style.setProperty('--text-primary', tg.themeParams.text_color || '#000000');
-        document.documentElement.style.setProperty('--text-secondary', tg.themeParams.hint_color || '#666666');
-        
-        // Получаем данные пользователя из URL (передаются ботом)
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
-        
-        // Навигация
-        const pages = {
-            profile: document.getElementById('page-profile'),
-            rating: document.getElementById('page-rating'),
-            prizes: document.getElementById('page-prizes'),
-            rules: document.getElementById('page-rules')
-        };
-        
-        const navItems = document.querySelectorAll('.nav-item');
-        
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                
-                // Обновляем активный пункт меню
-                navItems.forEach(n => n.classList.remove('active'));
-                item.classList.add('active');
-                
-                // Показываем нужную страницу
-                Object.values(pages).forEach(p => p.classList.remove('active'));
-                pages[page].classList.add('active');
-                
-                // Загружаем данные при переходе
-                if (page === 'rating') loadRating();
-                if (page === 'prizes') loadPrizes();
-            });
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+    
+    // Цвета из темы Telegram
+    document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color || '#FAFAFA');
+    document.documentElement.style.setProperty('--card', tg.themeParams.secondary_bg_color || '#FFFFFF');
+    document.documentElement.style.setProperty('--text-primary', tg.themeParams.text_color || '#000000');
+    document.documentElement.style.setProperty('--text-secondary', tg.themeParams.hint_color || '#666666');
+    
+    // ID пользователя из URL или из Telegram
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
+    
+    // API URL
+    const API_BASE = window.location.origin;
+    
+    // Навигация
+    const pages = {
+        profile: document.getElementById('page-profile'),
+        rating: document.getElementById('page-rating'),
+        prizes: document.getElementById('page-prizes'),
+        rules: document.getElementById('page-rules')
+    };
+    
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+            
+            navItems.forEach(n => n.classList.remove('active'));
+            item.classList.add('active');
+            
+            Object.values(pages).forEach(p => p.classList.remove('active'));
+            pages[page].classList.add('active');
+            
+            if (page === 'rating') loadRating();
+            if (page === 'prizes') loadPrizes();
         });
-        
-        // Вкладки рейтинга
-        document.querySelectorAll('.rating-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.rating-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                loadRating(tab.dataset.tab);
-            });
+    });
+    
+    // Вкладки рейтинга
+    document.querySelectorAll('.rating-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.rating-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            loadRating(tab.dataset.tab);
         });
+    });
+    
+    // Загрузка профиля
+    async function loadProfile() {
+        if (!userId) {
+            document.getElementById('user-name').textContent = 'Гость';
+            return;
+        }
         
-        // Загрузка данных профиля
-        async function loadProfile() {
-            if (!userId) {
-                document.getElementById('user-name').textContent = 'Гость';
+        try {
+            const response = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error(data.error);
                 return;
             }
             
-            try {
-                // Здесь будет запрос к твоему бэкенду
-                // const response = await fetch(`/api/profile?user_id=${userId}`);
-                // const data = await response.json();
-                
-                // Демо-данные
-                const data = {
-                    full_name: 'Богдан',
-                    sunday_streak: 4,
-                    total_sundays: 12,
-                    total_km: 120,
-                    avg_pace: '5:30',
-                    badges: [
-                        { type: 'first_workout', emoji: '🚀', name: 'Первый шаг' },
-                        { type: 'streak_4', emoji: '🔥', name: 'Серия 4' },
-                        { type: 'streak_8', emoji: '🔥🔥', name: 'Серия 8' },
-                        { type: 'km_100', emoji: '🏆', name: '100 км' }
-                    ],
-                    prizes: [
-                        { name: 'Скидка 20% в СпортМарафон', partner: 'СпортМарафон', claimed: false },
-                        { name: 'Бесплатный слот на забег', partner: 'URAL RUN', claimed: true }
-                    ],
-                    workouts: [
-                        { date: '06.04.2025', km: 10, min: 45, pace: '4:30' },
-                        { date: '30.03.2025', km: 8, min: 40, pace: '5:00' },
-                        { date: '23.03.2025', km: 12, min: 60, pace: '5:00' }
-                    ]
-                };
-                
-                // Заполняем профиль
-                document.getElementById('user-name').textContent = data.full_name;
-                document.getElementById('user-avatar').textContent = data.full_name[0];
-                document.getElementById('user-streak').innerHTML = `🔥 ${data.sunday_streak} воскресенья`;
-                
-                document.getElementById('stat-workouts').textContent = data.total_sundays;
-                document.getElementById('stat-km').textContent = data.total_km;
-                document.getElementById('stat-pace').textContent = data.avg_pace;
-                
-                // Бейджи
-                const badgesList = document.getElementById('badges-list');
-                badgesList.innerHTML = data.badges.map(b => `
-                    <div class="badge">
-                        <span class="badge-emoji">${b.emoji}</span>
-                        <div class="badge-info">
-                            <h4>${b.name}</h4>
-                        </div>
-                    </div>
-                `).join('');
-                document.getElementById('badges-count').textContent = data.badges.length;
-                
-                // Призы
-                const prizesList = document.getElementById('prizes-list');
-                const userPrizes = data.prizes.filter(p => p.claimed);
-                prizesList.innerHTML = userPrizes.map(p => `
-                    <div class="prize-item">
-                        <span class="prize-emoji">🎁</span>
-                        <div class="prize-info">
-                            <h4>${p.name}</h4>
-                            <p>${p.partner}</p>
-                        </div>
-                        <span class="prize-status claimed">Получен</span>
-                    </div>
-                `).join('');
-                document.getElementById('prizes-count').textContent = userPrizes.length;
-                
-                // Последние тренировки
-                const workoutsDiv = document.getElementById('recent-workouts');
-                workoutsDiv.innerHTML = data.workouts.map(w => `
-                    <div class="workout-item">
-                        <span class="workout-date">${w.date}</span>
-                        <span class="workout-data">${w.km} км / ${w.min} мин</span>
-                        <span class="workout-pace">${w.pace} мин/км</span>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Ошибка загрузки профиля:', error);
+            // Заполняем профиль
+            document.getElementById('user-name').textContent = data.full_name;
+            document.getElementById('user-avatar').textContent = data.full_name[0];
+            document.getElementById('user-streak').innerHTML = `🔥 ${data.sunday_streak} воскресенья`;
+            
+            document.getElementById('stat-workouts').textContent = data.total_sundays || 0;
+            document.getElementById('stat-km').textContent = data.total_km || 0;
+            
+            // Средний темп
+            if (data.workouts && data.workouts.length > 0) {
+                const avgPace = data.workouts.reduce((sum, w) => sum + w.pace, 0) / data.workouts.length;
+                const minutes = Math.floor(avgPace);
+                const seconds = Math.round((avgPace - minutes) * 60);
+                document.getElementById('stat-pace').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
+            
+            // Бейджи
+            const badgesList = document.getElementById('badges-list');
+            const badgeEmojis = {
+                'first_workout': '🚀',
+                'streak_4': '🔥',
+                'streak_8': '🔥🔥',
+                'streak_12': '🔥🔥🔥',
+                'km_100': '🏆'
+            };
+            const badgeNames = {
+                'first_workout': 'Первый шаг',
+                'streak_4': 'Серия 4',
+                'streak_8': 'Серия 8',
+                'streak_12': 'Серия 12',
+                'km_100': '100 км'
+            };
+            
+            badgesList.innerHTML = data.badges.map(b => `
+                <div class="badge">
+                    <span class="badge-emoji">${badgeEmojis[b.badge_type] || '🏅'}</span>
+                    <div class="badge-info">
+                        <h4>${badgeNames[b.badge_type] || b.badge_type}</h4>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('badges-count').textContent = data.badges.length;
+            
+            // Призы
+            const prizesList = document.getElementById('prizes-list');
+            const myPrizes = data.prizes || [];
+            prizesList.innerHTML = myPrizes.map(p => `
+                <div class="prize-item">
+                    <span class="prize-emoji">🎁</span>
+                    <div class="prize-info">
+                        <h4>${p.prizes_pool?.name || 'Приз'}</h4>
+                        <p>${p.prizes_pool?.partner || ''}</p>
+                    </div>
+                    <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
+                </div>
+            `).join('');
+            document.getElementById('prizes-count').textContent = myPrizes.length;
+            
+            // Тренировки
+            const workoutsDiv = document.getElementById('recent-workouts');
+            workoutsDiv.innerHTML = (data.workouts || []).map(w => `
+                <div class="workout-item">
+                    <span class="workout-date">${new Date(w.sunday_date).toLocaleDateString('ru-RU')}</span>
+                    <span class="workout-data">${w.distance_km} км / ${w.duration_min} мин</span>
+                    <span class="workout-pace">${w.pace?.toFixed(2) || '—'} мин/км</span>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Ошибка загрузки профиля:', error);
         }
+    }
+    
+    // Загрузка рейтинга
+    async function loadRating(type = 'km') {
+        const container = document.getElementById('rating-list');
+        container.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
         
-        // Загрузка рейтинга
-        async function loadRating(type = 'km') {
-            const container = document.getElementById('rating-list');
-            container.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
+        try {
+            const response = await fetch(`${API_BASE}/api/rating?type=${type}`);
+            const data = await response.json();
             
-            // Демо-данные
-            const rating = [
-                { place: 1, name: 'Алексей', value: 250, isCurrent: false },
-                { place: 2, name: 'Мария', value: 210, isCurrent: false },
-                { place: 3, name: 'Дмитрий', value: 180, isCurrent: false },
-                { place: 4, name: 'Богдан', value: 120, isCurrent: true },
-                { place: 5, name: 'Анна', value: 95, isCurrent: false }
-            ];
-            
+            const rating = data.rating || [];
             const medals = ['🥇', '🥈', '🥉'];
             const labels = { km: 'км', workouts: 'тр', streak: 'нед' };
             
-            container.innerHTML = rating.map(r => `
-                <div class="rating-item ${r.isCurrent ? 'current-user' : ''}">
-                    <span class="rating-place">${r.place <= 3 ? medals[r.place-1] : r.place}</span>
-                    <span class="rating-user">${r.name}</span>
-                    <span class="rating-value">${r.value} ${labels[type]}</span>
-                </div>
-            `).join('');
+            let currentUserId = userId;
+            if (currentUserId) {
+                const profileResponse = await fetch(`${API_BASE}/api/profile?user_id=${currentUserId}`);
+                const profileData = await profileResponse.json();
+                currentUserId = profileData.id;
+            }
+            
+            container.innerHTML = rating.map(r => {
+                const isCurrent = r.id === currentUserId;
+                let value;
+                if (type === 'km') value = r.total_km;
+                else if (type === 'workouts') value = r.total_sundays;
+                else value = r.sunday_streak;
+                
+                return `
+                    <div class="rating-item ${isCurrent ? 'current-user' : ''}">
+                        <span class="rating-place">${r.place <= 3 ? medals[r.place-1] : r.place}</span>
+                        <span class="rating-user">${r.full_name}</span>
+                        <span class="rating-value">${value || 0} ${labels[type]}</span>
+                    </div>
+                `;
+            }).join('');
+            
+        } catch (error) {
+            console.error('Ошибка загрузки рейтинга:', error);
+            container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
         }
+    }
+    
+    // Загрузка призов
+    async function loadPrizes() {
+        const availableContainer = document.getElementById('available-prizes-list');
+        const myContainer = document.getElementById('my-prizes-list');
         
-        // Загрузка призов
-        async function loadPrizes() {
-            const availableContainer = document.getElementById('available-prizes-list');
-            const myContainer = document.getElementById('my-prizes-list');
+        try {
+            const response = await fetch(`${API_BASE}/api/prizes?user_id=${userId}`);
+            const data = await response.json();
             
-            // Демо-данные
-            const available = [
-                { name: 'Скидка 15% в FitKit', partner: 'FitKit', description: 'На всё спортивное питание' },
-                { name: 'Мерч клуба со скидкой 50%', partner: 'Letski', description: 'Футболка или шорты' },
-                { name: 'Бесплатный слот на забег', partner: 'URAL RUN', description: 'Любая дистанция' }
-            ];
-            
-            const myPrizes = [
-                { name: 'Скидка 20% в СпортМарафон', partner: 'СпортМарафон', claimed: true }
-            ];
-            
-            availableContainer.innerHTML = available.map(p => `
+            availableContainer.innerHTML = data.available.map(p => `
                 <div class="prize-item">
                     <span class="prize-emoji">🎁</span>
                     <div class="prize-info">
                         <h4>${p.name}</h4>
-                        <p>${p.partner} · ${p.description}</p>
+                        <p>${p.partner} · ${p.description || ''}</p>
                     </div>
                 </div>
             `).join('');
             
-            myContainer.innerHTML = myPrizes.map(p => `
+            myContainer.innerHTML = data.my.map(p => `
                 <div class="prize-item">
                     <span class="prize-emoji">✅</span>
                     <div class="prize-info">
-                        <h4>${p.name}</h4>
-                        <p>${p.partner}</p>
+                        <h4>${p.prizes_pool?.name || 'Приз'}</h4>
+                        <p>${p.prizes_pool?.partner || ''}</p>
                     </div>
-                    <span class="prize-status claimed">Получен</span>
+                    <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
                 </div>
             `).join('');
+            
+        } catch (error) {
+            console.error('Ошибка загрузки призов:', error);
         }
-        
-        // Загрузка при старте
-        loadProfile();
-        
-        // Кнопка "Назад" в Telegram
-        tg.BackButton.onClick(() => {
-            // Показываем профиль
-            document.querySelector('.nav-item[data-page="profile"]').click();
-        });
-    </script>
+    }
+    
+    // Загрузка при старте
+    loadProfile();
+    
+    // Кнопка "Назад"
+    tg.BackButton.onClick(() => {
+        document.querySelector('.nav-item[data-page="profile"]').click();
+    });
+</script>
 </body>
 </html>
