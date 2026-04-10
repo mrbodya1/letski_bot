@@ -166,16 +166,20 @@ async def handle_workout_photo(message: types.Message):
     # Бейджи и призы за серии (4, 8, 12)
     if new_streak in STREAK_BADGES:
         badge_type = STREAK_BADGES[new_streak]
-        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", badge_type).execute()
-        if not existing.data:
+        
+        # Бейдж
+        existing_badge = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", badge_type).execute()
+        if not existing_badge.data:
             supabase.table("badges").insert({
                 "user_id": profile["id"],
                 "badge_type": badge_type,
                 "awarded_at": "now()"
             }).execute()
             response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🔥 Серия {new_streak} тренировок!\n"
-            
-            # Выдаём случайный приз
+        
+        # Приз (выдаётся независимо от бейджа)
+        existing_prize = supabase.table("user_prizes").select("*").eq("user_id", profile["id"]).eq("awarded_for", f"streak_{new_streak}").execute()
+        if not existing_prize.data:
             prize = await get_random_prize_for_user(profile["id"])
             if prize:
                 await award_prize(profile["id"], prize["id"], f"streak_{new_streak}")
