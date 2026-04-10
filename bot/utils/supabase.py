@@ -293,3 +293,102 @@ async def get_workouts_by_telegram_id(telegram_id: int):
         .execute()
     
     return result.data if result.data else []
+
+# ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА БЕЙДЖЕЙ ==========
+async def check_and_award_badges(user_id: str, stats: dict):
+    """
+    Универсальная проверка и выдача бейджей.
+    stats = {'total_workouts': 5, 'total_km': 120, 'streak': 4}
+    Возвращает список выданных бейджей.
+    """
+    # Получаем все активные бейджи из каталога
+    catalog = supabase.table("badges_catalog").select("*").eq("is_active", True).execute()
+    if not catalog.data:
+        return []
+    
+    # Получаем уже выданные бейджи пользователя
+    earned = supabase.table("badges").select("badge_type").eq("user_id", user_id).execute()
+    earned_types = {b['badge_type'] for b in earned.data} if earned.data else set()
+    
+    awarded = []
+    
+    for badge in catalog.data:
+        if badge['badge_type'] in earned_types:
+            continue
+        
+        should_award = False
+        
+        trigger_type = badge.get('trigger_type')
+        trigger_value = badge.get('trigger_value')
+        
+        if trigger_type == 'first_workout' and stats.get('total_workouts', 0) >= 1:
+            should_award = True
+        elif trigger_type == 'streak' and stats.get('streak', 0) >= trigger_value:
+            should_award = True
+        elif trigger_type == 'total_km' and stats.get('total_km', 0) >= trigger_value:
+            should_award = True
+        elif trigger_type == 'total_workouts' and stats.get('total_workouts', 0) >= trigger_value:
+            should_award = True
+        
+        if should_award:
+            supabase.table("badges").insert({
+                "user_id": user_id,
+                "badge_type": badge['badge_type'],
+                "awarded_at": "now()"
+            }).execute()
+            awarded.append(badge)
+    
+    return awarded
+
+
+# ========== УНИВЕРСАЛЬНАЯ ВЫДАЧА ПРИЗОВ ==========
+async def check_and_award_prize(user_id: str, total_workouts: int):
+    """
+    Выдаёт приз в зависимости от количества тренировок.
+    Уровни: 4-9 (common), 10-16 (rare), 17-23 (epic), 24-29 (legendary)
+    Возвращает (prize, level_name) или (None, None)
+    """
+    # Определяем уровень
+    if 4 <= total_workouts <= 9:
+        level = 'common'
+        level_name = 'Базовый'
+    elif 10 <= total_workouts <= 16:
+        level = 'rare'
+        level_name = 'Редкий'
+    elif 17 <= total_workouts <= 23:
+        level = 'epic'
+        level_name = 'Эпический'
+    elif 24 <= total_workouts <= 29:
+        level = 'legendary'
+        level_name = 'Легендарный'
+    else:
+        return None, None
+    
+    # Проверяем, не выдан ли уже приз этого уровня
+    existing = supabase.table("user_prizes").select("*").eq("user_id", user_id).eq("awarded_for", f"level_{level}").execute()
+    if existing.data:
+        return None, None
+    
+    # Ищем приз нужного уровня
+    prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).eq("level", level).execute()
+    
+    if not prizes.data:
+        # Если нет призов нужного уровня, берём любые активные
+        prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
+    
+    if not prizes.data:
+        return None, None
+    
+    import random
+    prize = random.choice(prizes.data)
+    
+    # Выдаём приз
+    supabase.table("user_prizes").insert({
+        "user_id": user_id,
+        "prize_id": prize['id'],
+        "awarded_for": f"level_{level}",
+        "awarded_at": "now()",
+        "is_claimed": False
+    }).execute()
+    
+    return prize, level_name
