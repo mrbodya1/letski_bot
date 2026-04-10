@@ -1,4 +1,5 @@
 import re
+import hashlib
 from datetime import date
 from aiogram import types
 from aiogram.dispatcher.filters import Command
@@ -8,10 +9,15 @@ from config import MAIN_CHAT_ID, STREAK_BADGES, ADMIN_IDS
 from bot.utils.supabase import (
     get_profile, get_sunday_schedule, create_workout,
     get_random_prize_for_user, award_prize, update_workout_repost,
-    get_all_coaches, create_sunday_schedule as create_schedule
+    get_all_coaches, create_sunday_schedule as create_schedule,
+    supabase
 )
 from bot.keyboards.inline import get_rating_keyboard
 from bot.utils.helpers import calculate_pace, format_pace
+
+
+# Кэш для защиты от повторной обработки сообщений
+processed_messages = set()
 
 
 def is_admin(user_id: int) -> bool:
@@ -41,6 +47,17 @@ def parse_workout_caption(caption: str) -> dict:
 
 @dp.message_handler(content_types=['photo'])
 async def handle_workout_photo(message: types.Message):
+    # ========== ЗАЩИТА ОТ ПОВТОРНОЙ ОБРАБОТКИ ==========
+    msg_id = f"{message.chat.id}:{message.message_id}"
+    if msg_id in processed_messages:
+        print(f"⚠️ Сообщение {msg_id} уже обработано, пропускаем")
+        return
+    processed_messages.add(msg_id)
+    
+    # Очищаем старые сообщения из кэша (чтобы не рос бесконечно)
+    if len(processed_messages) > 100:
+        processed_messages.clear()
+    
     user_id = message.from_user.id
     
     # Получаем профиль
@@ -80,15 +97,7 @@ async def handle_workout_photo(message: types.Message):
         await message.reply("❌ Нет тренера. Добавь тренера через админку.")
         return
     
-    # ========== ВРЕМЕННАЯ ЛОГИКА ДЛЯ ТЕСТИРОВАНИЯ ==========
-    # Увеличиваем серию вручную (имитируем каждую тренировку как продолжение серии)
-    from bot.utils.supabase import supabase
-    
-    # Получаем текущую серию
-    current_streak = profile.get("sunday_streak", 0) or 0
-    new_streak = current_streak + 1
-    
-    # Сохраняем тренировку
+    # Сохраняем тренировку (триггеры БД обновят статистику)
     workout = await create_workout(
         user_id=profile["id"],
         coach_id=schedule["coach_id"],
@@ -102,74 +111,78 @@ async def handle_workout_photo(message: types.Message):
         await message.reply("❌ Ошибка при сохранении тренировки.")
         return
     
-    # ========== ПОЛУЧАЕМ ОБНОВЛЁННЫЙ ПРОФИЛЬ (триггеры уже сработали) ==========
+    # Получаем обновлённый профиль (триггеры уже сработали)
     updated_profile = await get_profile(user_id)
     new_streak = updated_profile.get("sunday_streak", 0) or 0
     total_km = updated_profile.get("total_km", 0) or 0
+    total_sundays = updated_profile.get("total_sundays", 0) or 0
     
     # Публикуем в общий чат
     coach_name = schedule.get("coaches", {}).get("full_name", "Неизвестный тренер")
     pace = calculate_pace(parsed["km"], parsed["min"])
     
-    group_message = await telegram_bot.send_photo(
-        chat_id=MAIN_CHAT_ID,
-        photo=message.photo[-1].file_id,
-        caption=(
-            f"🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n"
-            f"✅ <b>Тренировка принята!</b>\n\n"
-            f"👤 {profile['full_name']}\n"
-            f"👟 Тренер: {coach_name}\n"
-            f"📏 Дистанция: {parsed['km']} км\n"
-            f"⏱ Время: {parsed['min']} мин\n"
-            f"⚡️ Темп: {format_pace(pace)} мин/км\n"
-            f"🔥 Серия: {new_streak} воскресений\n\n"
-            f"#km{parsed['km']} #min{parsed['min']}"
-        ),
-        parse_mode="HTML"
-    )
-    
-    await update_workout_repost(workout["id"], group_message.message_id)
+    try:
+        group_message = await telegram_bot.send_photo(
+            chat_id=MAIN_CHAT_ID,
+            photo=message.photo[-1].file_id,
+            caption=(
+                f"🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n"
+                f"✅ <b>Тренировка принята!</b>\n\n"
+                f"👤 {profile['full_name']}\n"
+                f"👟 Тренер: {coach_name}\n"
+                f"📏 Дистанция: {parsed['km']} км\n"
+                f"⏱ Время: {parsed['min']} мин\n"
+                f"⚡️ Темп: {format_pace(pace)} мин/км\n"
+                f"🔥 Серия: {new_streak} воскресений\n\n"
+                f"#km{parsed['km']} #min{parsed['min']}"
+            ),
+            parse_mode="HTML"
+        )
+        await update_workout_repost(workout["id"], group_message.message_id)
+    except Exception as e:
+        print(f"⚠️ Не удалось отправить в общий чат: {e}")
     
     response_text = (
         f"🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>\n\n"
         f"📊 {parsed['km']} км / {parsed['min']} мин\n"
         f"⚡️ Темп: {format_pace(pace)} мин/км\n"
         f"🔥 Текущая серия: {new_streak} воскресений\n"
+        f"🏃 Всего тренировок: {total_sundays}\n"
+        f"📏 Всего км: {total_km}\n"
     )
-
-# ========== ПРОВЕРЯЕМ БЕЙДЖИ И ПРИЗЫ ==========
-# (используем updated_profile и new_streak)
     
     # ========== ПРОВЕРЯЕМ БЕЙДЖИ И ПРИЗЫ ==========
     # Бейдж за первую тренировку
-    if new_streak == 1:
-        supabase.table("badges").insert({
-            "user_id": profile["id"],
-            "badge_type": "first_workout",
-            "awarded_at": "now()"
-        }).execute()
-        response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🚀 Первый шаг\n"
+    if total_sundays == 1:
+        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", "first_workout").execute()
+        if not existing.data:
+            supabase.table("badges").insert({
+                "user_id": profile["id"],
+                "badge_type": "first_workout",
+                "awarded_at": "now()"
+            }).execute()
+            response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🚀 Первый шаг\n"
     
     # Бейджи и призы за серии (4, 8, 12)
     if new_streak in STREAK_BADGES:
         badge_type = STREAK_BADGES[new_streak]
-        supabase.table("badges").insert({
-            "user_id": profile["id"],
-            "badge_type": badge_type,
-            "awarded_at": "now()"
-        }).execute()
-        response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🔥 Серия {new_streak} тренировок!\n"
-        
-        # Выдаём случайный приз
-        prize = await get_random_prize_for_user(profile["id"])
-        if prize:
-            await award_prize(profile["id"], prize["id"], f"streak_{new_streak}")
-            response_text += f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n{prize['name']}\n"
+        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", badge_type).execute()
+        if not existing.data:
+            supabase.table("badges").insert({
+                "user_id": profile["id"],
+                "badge_type": badge_type,
+                "awarded_at": "now()"
+            }).execute()
+            response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🔥 Серия {new_streak} тренировок!\n"
+            
+            # Выдаём случайный приз
+            prize = await get_random_prize_for_user(profile["id"])
+            if prize:
+                await award_prize(profile["id"], prize["id"], f"streak_{new_streak}")
+                response_text += f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n{prize['name']}\n"
     
     # Бейдж за 100 км
-    total_km = (profile.get("total_km", 0) or 0) + parsed["km"]
     if total_km >= 100:
-        # Проверяем, есть ли уже бейдж
         existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", "km_100").execute()
         if not existing.data:
             supabase.table("badges").insert({
@@ -178,6 +191,17 @@ async def handle_workout_photo(message: types.Message):
                 "awarded_at": "now()"
             }).execute()
             response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n🏆 100 км\n"
+    
+    # Бейдж за 500 км
+    if total_km >= 500:
+        existing = supabase.table("badges").select("*").eq("user_id", profile["id"]).eq("badge_type", "km_500").execute()
+        if not existing.data:
+            supabase.table("badges").insert({
+                "user_id": profile["id"],
+                "badge_type": "km_500",
+                "awarded_at": "now()"
+            }).execute()
+            response_text += "\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n👑 500 км\n"
     
     await message.reply(response_text, parse_mode="HTML")
     
@@ -191,3 +215,14 @@ async def handle_workout_photo(message: types.Message):
 @dp.message_handler(Command("check_sunday"))
 async def cmd_check_sunday(message: types.Message):
     await message.answer("🧪 Тестовый режим: можно отправлять тренировки в любой день!")
+
+
+@dp.message_handler(Command("clear_cache"))
+async def cmd_clear_cache(message: types.Message):
+    """Очистить кэш обработанных сообщений (для админа)"""
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ Нет доступа")
+        return
+    
+    processed_messages.clear()
+    await message.answer("✅ Кэш очищен")
