@@ -190,6 +190,73 @@ async def get_rating_by_workouts():
     result = supabase.table("rating_by_workouts").select("*").limit(50).execute()
     return result.data if result.data else []
 
+# ========== КАТАЛОГ БЕЙДЖЕЙ ==========
+async def get_badges_catalog():
+    """Получить все бейджи из каталога"""
+    result = supabase.table("badges_catalog").select("*").order("created_at").execute()
+    return result.data if result.data else []
+
+
+async def get_active_badges_catalog():
+    """Получить активные бейджи"""
+    result = supabase.table("badges_catalog").select("*").eq("is_active", true).execute()
+    return result.data if result.data else []
+
+
+# ========== УПРАВЛЕНИЕ ПРИЗАМИ ==========
+async def get_all_prizes_admin():
+    """Получить все призы для админки"""
+    result = supabase.table("prizes_pool").select("*").order("created_at", desc=True).execute()
+    return result.data if result.data else []
+
+
+async def create_prize(name: str, partner: str, prize_type: str, value: str, category: str, promo_code: str):
+    """Создать новый приз"""
+    data = {
+        "name": name,
+        "partner": partner,
+        "type": prize_type,
+        "value": value,
+        "category": category,
+        "promo_code": promo_code
+    }
+    result = supabase.table("prizes_pool").insert(data).execute()
+    return result.data[0] if result.data else None
+
+
+async def toggle_prize_active(prize_id: str):
+    """Переключить активность приза"""
+    # Получаем текущий статус
+    current = supabase.table("prizes_pool").select("is_active, name").eq("id", prize_id).execute()
+    if not current.data:
+        return None
+    
+    new_status = not current.data[0]["is_active"]
+    result = supabase.table("prizes_pool").update({"is_active": new_status}).eq("id", prize_id).execute()
+    
+    if result.data:
+        return {"name": current.data[0]["name"], "is_active": new_status}
+    return None
+
+
+async def update_prize_quantity(prize_id: str, total: int):
+    """Обновить количество призов"""
+    result = supabase.table("prizes_pool").update({
+        "total_quantity": total,
+        "remaining_quantity": total
+    }).eq("id", prize_id).execute()
+    return result.data[0] if result.data else None
+
+
+async def decrement_prize_quantity(prize_id: str):
+    """Уменьшить оставшееся количество приза на 1"""
+    current = supabase.table("prizes_pool").select("remaining_quantity").eq("id", prize_id).execute()
+    if current.data and current.data[0]["remaining_quantity"] > 0:
+        new_qty = current.data[0]["remaining_quantity"] - 1
+        supabase.table("prizes_pool").update({"remaining_quantity": new_qty}).eq("id", prize_id).execute()
+        return new_qty
+    return 0
+
 
 async def get_rating_by_streak():
     """Рейтинг по серии"""
