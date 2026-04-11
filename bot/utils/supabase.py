@@ -431,9 +431,12 @@ async def get_all_prizes_admin():
 
 async def create_prize_full(data: dict):
     """Создать приз со всеми полями"""
-    allowed = ["name", "description", "partner", "type", "value", "level", 
-               "promo_code", "link_url", "is_active", "total_quantity", "remaining_quantity"]
-    insert_data = {k: v for k, v in data.items() if k in allowed}
+    allowed = [
+        "name", "description", "partner", "type", "value", "level", 
+        "promo_code", "link_url", "is_active", "total_quantity", 
+        "remaining_quantity", "category"
+    ]
+    insert_data = {k: v for k, v in data.items() if k in allowed and v is not None}
     
     if not insert_data.get("name"):
         return None
@@ -443,6 +446,13 @@ async def create_prize_full(data: dict):
         import random
         import string
         insert_data["promo_code"] = f"LETSKI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+    
+    # Если количество не указано, ставим -1 (безлимитно)
+    if "total_quantity" not in insert_data:
+        insert_data["total_quantity"] = -1
+        insert_data["remaining_quantity"] = -1
+    elif insert_data.get("total_quantity") and "remaining_quantity" not in insert_data:
+        insert_data["remaining_quantity"] = insert_data["total_quantity"]
     
     result = supabase.table("prizes_pool").insert(insert_data).execute()
     return result.data[0] if result.data else None
