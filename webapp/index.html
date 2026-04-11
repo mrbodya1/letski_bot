@@ -160,7 +160,6 @@
             color: #1e3c72;
         }
 
-        /* Бейджи */
         .badges-container {
             display: flex;
             gap: 10px;
@@ -189,7 +188,6 @@
             margin-bottom: 2px;
         }
 
-        /* Призы */
         .prize-item {
             background: white;
             border-radius: 18px;
@@ -255,7 +253,6 @@
             transform: translateX(4px);
         }
 
-        /* Прогресс-бар для бейджей */
         .badge-progress-item {
             background: white;
             border-radius: 18px;
@@ -322,7 +319,6 @@
             background: #00C853;
         }
 
-        /* Табы рейтинга */
         .rating-tabs {
             display: flex;
             gap: 8px;
@@ -336,7 +332,7 @@
         .rating-tab {
             flex: 1;
             text-align: center;
-            padding: 12px 4px;
+            padding: 12px;
             font-size: 14px;
             font-weight: 600;
             border-radius: 50px;
@@ -394,7 +390,6 @@
             color: #1e3c72;
         }
 
-        /* Тренировки */
         .workout-item {
             display: flex;
             justify-content: space-between;
@@ -424,7 +419,6 @@
             color: #1e3c72;
         }
 
-        /* Нижнее меню */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -468,7 +462,8 @@
             font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
         }
 
         .loading {
@@ -518,7 +513,138 @@
             border-bottom: 1px dashed #1e3c72;
         }
 
-        /* Адаптив для маленьких экранов */
+        /* Админ-панель */
+        .admin-menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .admin-menu-item {
+            background: white;
+            border-radius: 18px;
+            padding: 20px 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(30, 60, 114, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .admin-menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .admin-menu-emoji {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .admin-menu-label {
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            text-align: left;
+            padding: 12px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-table td {
+            padding: 12px 8px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .admin-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .admin-btn:hover {
+            opacity: 1;
+        }
+
+        .admin-btn-danger {
+            color: #e74c3c;
+        }
+
+        .admin-btn-success {
+            color: #00C853;
+        }
+
+        .admin-form {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .admin-form input,
+        .admin-form select,
+        .admin-form textarea {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(30, 60, 114, 0.2);
+            border-radius: 12px;
+            font-family: 'Onest', sans-serif;
+            font-size: 14px;
+        }
+
+        .admin-form button {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .admin-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            color: #1e3c72;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch input {
+            width: auto;
+            margin: 0;
+        }
+
         @media (max-width: 360px) {
             .nav-item {
                 padding: 4px 4px;
@@ -535,9 +661,11 @@
                 padding: 10px 2px;
                 min-height: 40px;
             }
+            .admin-menu {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        /* Поддержка безопасной зоны для iPhone */
+
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             body {
                 padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
@@ -608,17 +736,14 @@
             </div>
         </div>
         
-        <!-- БЕЙДЖИ (ВСЕ С ПРОГРЕССОМ) -->
+        <!-- БЕЙДЖИ -->
         <div id="page-badges" class="page">
             <div class="header">
                 <div class="logo">LETSKI<span>school</span></div>
             </div>
-            
             <div class="section">
                 <div class="section-title"><h3>🏅 Все бейджи</h3></div>
-                <div id="all-badges-list">
-                    <div class="loading">Загрузка...</div>
-                </div>
+                <div id="all-badges-list"><div class="loading">Загрузка...</div></div>
             </div>
         </div>
         
@@ -627,16 +752,12 @@
             <div class="header">
                 <div class="logo">LETSKI<span>school</span></div>
             </div>
-            
             <div class="rating-tabs">
                 <div class="rating-tab active" data-tab="km">По км</div>
                 <div class="rating-tab" data-tab="workouts">По тренировкам</div>
                 <div class="rating-tab" data-tab="streak">По серии</div>
             </div>
-            
-            <div class="rating-list" id="rating-list">
-                <div class="loading">Загрузка рейтинга...</div>
-            </div>
+            <div class="rating-list" id="rating-list"><div class="loading">Загрузка...</div></div>
         </div>
         
         <!-- ПРИЗЫ -->
@@ -644,12 +765,10 @@
             <div class="header">
                 <div class="logo">LETSKI<span>school</span></div>
             </div>
-            
             <div class="section">
                 <div class="section-title"><h3>🎁 Доступные призы</h3></div>
                 <div id="available-prizes-list"><div class="loading">Загрузка...</div></div>
             </div>
-            
             <div class="section">
                 <div class="section-title"><h3>✅ Мои призы</h3></div>
                 <div id="my-prizes-list"><div class="loading">Загрузка...</div></div>
@@ -661,30 +780,66 @@
             <div class="header">
                 <div class="logo">LETSKI<span>school</span></div>
             </div>
-            
             <div class="card rules-content">
                 <h2>📜 Правила клуба</h2>
-                
                 <div style="margin-bottom: 24px;">
                     <h3>🏃 Тренировки</h3>
-                    <p>• Каждое воскресенье<br>
-                    • Отчёт принимается только в день тренировки<br>
-                    • Формат подписи: #kmX #minX<br>
-                    • Минимум 5 км и 30 минут</p>
+                    <p>• Каждое воскресенье<br>• Отчёт только в день тренировки<br>• Формат: #kmX #minX<br>• Минимум 5 км и 30 минут</p>
                 </div>
-                
                 <div style="margin-bottom: 24px;">
                     <h3>🏅 Бейджи и призы</h3>
-                    <p>• Серия 4 воскресенья — бейдж + приз<br>
-                    • Серия 8 воскресений — бейдж + приз<br>
-                    • Серия 12 воскресений — бейдж + приз<br>
-                    • Призы выдаются случайно</p>
+                    <p>• Серия 4 — бейдж + приз<br>• Серия 8 — бейдж + приз<br>• Серия 12 — бейдж + приз</p>
+                </div>
+                <div><h3>❓ Вопросы?</h3><p><a href="https://t.me/Stroitelev_Fedor" class="rules-link">@Stroitelev_Fedor</a></p></div>
+            </div>
+        </div>
+
+        <!-- АДМИН-ПАНЕЛЬ -->
+        <div id="page-admin" class="page">
+            <div class="header">
+                <div class="logo">LETSKI<span>school</span></div>
+            </div>
+            <div id="admin-content">
+                <!-- Главное меню админа -->
+                <div id="admin-main-menu">
+                    <div class="admin-menu">
+                        <div class="admin-menu-item" onclick="showAdminSection('schedule')">
+                            <div class="admin-menu-emoji">📅</div>
+                            <div class="admin-menu-label">Расписание</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('coaches')">
+                            <div class="admin-menu-emoji">👟</div>
+                            <div class="admin-menu-label">Тренеры</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('prizes')">
+                            <div class="admin-menu-emoji">🎁</div>
+                            <div class="admin-menu-label">Призы</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('badges')">
+                            <div class="admin-menu-emoji">🏅</div>
+                            <div class="admin-menu-label">Бейджи</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('users')">
+                            <div class="admin-menu-emoji">👥</div>
+                            <div class="admin-menu-label">Участники</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('workouts')">
+                            <div class="admin-menu-emoji">🏃</div>
+                            <div class="admin-menu-label">Тренировки</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('ratings')">
+                            <div class="admin-menu-emoji">⭐</div>
+                            <div class="admin-menu-label">Оценки</div>
+                        </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('stats')">
+                            <div class="admin-menu-emoji">📊</div>
+                            <div class="admin-menu-label">Статистика</div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div>
-                    <h3>❓ Вопросы?</h3>
-                    <p><a href="https://t.me/Stroitelev_Fedor" class="rules-link">@Stroitelev_Fedor</a></p>
-                </div>
+                <!-- Контейнер для разделов админки -->
+                <div id="admin-section-content"></div>
             </div>
         </div>
     </div>
@@ -711,6 +866,10 @@
             <span class="nav-emoji">📜</span>
             <span class="nav-label">Правила</span>
         </div>
+        <div class="nav-item" data-page="admin" id="nav-admin" style="display: none;">
+            <span class="nav-emoji">🛠</span>
+            <span class="nav-label">Админ</span>
+        </div>
     </div>
 
     <script>
@@ -722,13 +881,17 @@
         const userId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
         const API_BASE = window.location.origin;
         
+        let currentUser = null;
+        let isAdmin = false;
+        
         // Навигация
         const pages = {
             profile: document.getElementById('page-profile'),
             badges: document.getElementById('page-badges'),
             rating: document.getElementById('page-rating'),
             prizes: document.getElementById('page-prizes'),
-            rules: document.getElementById('page-rules')
+            rules: document.getElementById('page-rules'),
+            admin: document.getElementById('page-admin')
         };
         
         const navItems = document.querySelectorAll('.nav-item');
@@ -746,6 +909,7 @@
                 if (page === 'badges') loadAllBadges();
                 if (page === 'rating') loadRating();
                 if (page === 'prizes') loadPrizes();
+                if (page === 'admin') loadAdminMainMenu();
             });
         });
         
@@ -758,23 +922,21 @@
         });
         
         const badgeEmojis = {
-            'first_workout': '🚀', 'streak_4': '🔥', 'streak_8': '🔥🔥', 
-            'streak_12': '🔥🔥🔥', 'km_100': '🏆', 'km_500': '👑', 
+            'first_workout': '🚀', 'streak_4': '🔥', 'streak_8': '⚙️', 
+            'streak_12': '🦾', 'km_100': '🏆', 'km_500': '👑', 
             'km_1000': '💎', 'workouts_10': '💪', 'workouts_25': '🦾',
-            'workouts_50': '🏅', 'early_bird': '🌅', 'night_owl': '🌙',
-            'fast_pace': '⚡'
+            'workouts_50': '🏅', 'fast_pace': '⚡'
         };
         
         const badgeNames = {
-            'first_workout': 'Первый шаг', 'streak_4': 'Серия 4', 
-            'streak_8': 'Серия 8', 'streak_12': 'Серия 12', 
+            'first_workout': 'Первый шаг', 'streak_4': 'Стабильность', 
+            'streak_8': 'Системный бегун', 'streak_12': 'Железный человек', 
             'km_100': '100 км', 'km_500': '500 км', 'km_1000': '1000 км',
             'workouts_10': '10 тренировок', 'workouts_25': '25 тренировок',
-            'workouts_50': '50 тренировок', 'early_bird': 'Жаворонок',
-            'night_owl': 'Сова', 'fast_pace': 'Спринтер'
+            'workouts_50': '50 тренировок', 'fast_pace': 'Спринтер'
         };
         
-        // Загрузка профиля
+        // ========== ЗАГРУЗКА ПРОФИЛЯ ==========
         async function loadProfile() {
             if (!userId) {
                 document.getElementById('user-name').textContent = 'Гость';
@@ -785,9 +947,14 @@
                 const response = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
                 const data = await response.json();
                 
-                if (data.error) {
-                    console.error(data.error);
-                    return;
+                if (data.error) return;
+                
+                currentUser = data;
+                isAdmin = data.role === 'admin';
+                
+                // Показываем вкладку Админ если нужно
+                if (isAdmin) {
+                    document.getElementById('nav-admin').style.display = 'flex';
                 }
                 
                 document.getElementById('user-name').textContent = data.full_name || 'Участник';
@@ -864,13 +1031,12 @@
             }
         }
         
-        // Загрузка всех бейджей с прогрессом
+        // ========== БЕЙДЖИ ==========
         async function loadAllBadges() {
             const container = document.getElementById('all-badges-list');
             container.innerHTML = '<div class="loading">Загрузка...</div>';
             
             try {
-                // Получаем каталог бейджей и прогресс пользователя
                 const [catalogRes, profileRes] = await Promise.all([
                     fetch(`${API_BASE}/api/badges_catalog`),
                     fetch(`${API_BASE}/api/profile?user_id=${userId}`)
@@ -891,57 +1057,23 @@
                     return;
                 }
                 
-                container.innerHTML = catalog.badges.map(badge => {
+                container.innerHTML = catalog.badges.filter(b => b.is_active).map(badge => {
                     const isEarned = earnedTypes.has(badge.badge_type);
-                    let progress = 0;
-                    let currentValue = 0;
-                    let targetValue = 0;
+                    let progress = 0, currentValue = 0, targetValue = 0;
                     
-                    // Определяем прогресс в зависимости от типа бейджа
-                    if (badge.badge_type === 'km_100') {
-                        targetValue = 100;
-                        currentValue = Math.min(userKm, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'km_500') {
-                        targetValue = 500;
-                        currentValue = Math.min(userKm, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'km_1000') {
-                        targetValue = 1000;
-                        currentValue = Math.min(userKm, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'workouts_10') {
-                        targetValue = 10;
-                        currentValue = Math.min(userWorkouts, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'workouts_25') {
-                        targetValue = 25;
-                        currentValue = Math.min(userWorkouts, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'workouts_50') {
-                        targetValue = 50;
-                        currentValue = Math.min(userWorkouts, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'streak_4') {
-                        targetValue = 4;
-                        currentValue = Math.min(userStreak, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'streak_8') {
-                        targetValue = 8;
-                        currentValue = Math.min(userStreak, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'streak_12') {
-                        targetValue = 12;
-                        currentValue = Math.min(userStreak, targetValue);
-                        progress = (currentValue / targetValue) * 100;
-                    } else if (badge.badge_type === 'first_workout') {
-                        progress = userWorkouts >= 1 ? 100 : 0;
-                        currentValue = userWorkouts >= 1 ? 1 : 0;
-                        targetValue = 1;
-                    } else {
-                        progress = isEarned ? 100 : 0;
-                    }
+                    if (badge.badge_type === 'km_100') { targetValue = 100; currentValue = Math.min(userKm, targetValue); }
+                    else if (badge.badge_type === 'km_500') { targetValue = 500; currentValue = Math.min(userKm, targetValue); }
+                    else if (badge.badge_type === 'km_1000') { targetValue = 1000; currentValue = Math.min(userKm, targetValue); }
+                    else if (badge.badge_type === 'workouts_10') { targetValue = 10; currentValue = Math.min(userWorkouts, targetValue); }
+                    else if (badge.badge_type === 'workouts_25') { targetValue = 25; currentValue = Math.min(userWorkouts, targetValue); }
+                    else if (badge.badge_type === 'workouts_50') { targetValue = 50; currentValue = Math.min(userWorkouts, targetValue); }
+                    else if (badge.badge_type === 'streak_4') { targetValue = 4; currentValue = Math.min(userStreak, targetValue); }
+                    else if (badge.badge_type === 'streak_8') { targetValue = 8; currentValue = Math.min(userStreak, targetValue); }
+                    else if (badge.badge_type === 'streak_12') { targetValue = 12; currentValue = Math.min(userStreak, targetValue); }
+                    else if (badge.badge_type === 'first_workout') { progress = userWorkouts >= 1 ? 100 : 0; currentValue = userWorkouts >= 1 ? 1 : 0; targetValue = 1; }
+                    else { progress = isEarned ? 100 : 0; }
                     
+                    if (targetValue > 0) progress = (currentValue / targetValue) * 100;
                     const progressText = targetValue > 0 ? `${currentValue}/${targetValue}` : (isEarned ? 'Получен' : 'Не получен');
                     
                     return `
@@ -962,15 +1094,14 @@
                 }).join('');
                 
             } catch (error) {
-                console.error('Ошибка загрузки бейджей:', error);
                 container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
         
-        // Загрузка рейтинга
+        // ========== РЕЙТИНГ ==========
         async function loadRating(type = 'km') {
             const container = document.getElementById('rating-list');
-            container.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
             
             try {
                 const response = await fetch(`${API_BASE}/api/rating?type=${type}`);
@@ -978,43 +1109,32 @@
                 const rating = data.rating || [];
                 
                 if (rating.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Нет данных для рейтинга</div>';
+                    container.innerHTML = '<div class="empty-state">Нет данных</div>';
                     return;
                 }
                 
                 const medals = ['🥇', '🥈', '🥉'];
                 const labels = { km: 'км', workouts: 'тр', streak: 'нед' };
                 
-                let currentUserId = null;
-                if (userId) {
-                    const profileResponse = await fetch(`${API_BASE}/api/profile?user_id=${userId}`);
-                    const profileData = await profileResponse.json();
-                    currentUserId = profileData.id;
-                }
-                
                 container.innerHTML = rating.map(r => {
-                    const isCurrent = r.id === currentUserId;
-                    let value;
-                    if (type === 'km') value = r.total_km || 0;
-                    else if (type === 'workouts') value = r.total_sundays || 0;
-                    else value = r.sunday_streak || 0;
+                    const isCurrent = r.id === currentUser?.id;
+                    let value = type === 'km' ? r.total_km : (type === 'workouts' ? r.total_sundays : r.sunday_streak);
                     
                     return `
                         <div class="rating-item ${isCurrent ? 'current-user' : ''}">
                             <span class="rating-place">${r.place <= 3 ? medals[r.place-1] : r.place}</span>
                             <span class="rating-user">${r.full_name || 'Участник'}</span>
-                            <span class="rating-value">${value} ${labels[type]}</span>
+                            <span class="rating-value">${value || 0} ${labels[type]}</span>
                         </div>
                     `;
                 }).join('');
                 
             } catch (error) {
-                console.error('Ошибка загрузки рейтинга:', error);
                 container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
         
-        // Загрузка призов
+        // ========== ПРИЗЫ ==========
         async function loadPrizes() {
             const availableContainer = document.getElementById('available-prizes-list');
             const myContainer = document.getElementById('my-prizes-list');
@@ -1066,12 +1186,178 @@
                 }
                 
             } catch (error) {
-                console.error('Ошибка загрузки призов:', error);
                 availableContainer.innerHTML = '<div class="loading">Ошибка загрузки</div>';
                 myContainer.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
         
+        // ========== АДМИН-ПАНЕЛЬ ==========
+        function loadAdminMainMenu() {
+            document.getElementById('admin-main-menu').style.display = 'block';
+            document.getElementById('admin-section-content').innerHTML = '';
+        }
+        
+        function showAdminSection(section) {
+            document.getElementById('admin-main-menu').style.display = 'none';
+            const content = document.getElementById('admin-section-content');
+            
+            const titles = {
+                schedule: '📅 Расписание', coaches: '👟 Тренеры', prizes: '🎁 Призы',
+                badges: '🏅 Бейджи', users: '👥 Участники', workouts: '🏃 Тренировки',
+                ratings: '⭐ Оценки', stats: '📊 Статистика'
+            };
+            
+            content.innerHTML = `
+                <div class="admin-back" onclick="loadAdminMainMenu()">← Назад</div>
+                <h3 style="margin-bottom: 16px;">${titles[section]}</h3>
+                <div id="admin-dynamic-content"><div class="loading">Загрузка...</div></div>
+            `;
+            
+            loadAdminSectionData(section);
+        }
+        
+        async function loadAdminSectionData(section) {
+            const container = document.getElementById('admin-dynamic-content');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/${section}`);
+                const data = await response.json();
+                
+                if (section === 'coaches') {
+                    renderCoachesTable(container, data);
+                } else if (section === 'prizes') {
+                    renderPrizesTable(container, data);
+                } else if (section === 'badges') {
+                    renderBadgesTable(container, data);
+                } else if (section === 'stats') {
+                    renderStats(container, data);
+                } else {
+                    container.innerHTML = `<div class="empty-state">Раздел в разработке</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
+            }
+        }
+        
+        function renderCoachesTable(container, coaches) {
+            if (!coaches || coaches.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет тренеров</div>';
+                return;
+            }
+            
+            let html = `
+                <div style="margin-bottom: 16px;">
+                    <button class="admin-form button" onclick="showAddCoachForm()" style="width: auto; padding: 12px 20px;">+ Добавить тренера</button>
+                </div>
+                <table class="admin-table">
+                    <tr><th>Имя</th><th>Рейтинг</th><th></th></tr>
+            `;
+            
+            coaches.forEach(c => {
+                html += `
+                    <tr>
+                        <td>${c.full_name}</td>
+                        <td>${c.avg_rating_pro?.toFixed(1) || '0.0'} ⭐ (${c.total_ratings || 0})</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn" onclick="editCoach('${c.id}')">✏️</button>
+                            <button class="admin-btn admin-btn-danger" onclick="deleteCoach('${c.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+        
+        function renderPrizesTable(container, prizes) {
+            if (!prizes || prizes.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет призов</div>';
+                return;
+            }
+            
+            let html = `
+                <div style="margin-bottom: 16px;">
+                    <button class="admin-form button" onclick="showAddPrizeForm()" style="width: auto; padding: 12px 20px;">+ Добавить приз</button>
+                </div>
+                <table class="admin-table">
+                    <tr><th>Название</th><th>Партнёр</th><th>Уровень</th><th></th></tr>
+            `;
+            
+            prizes.forEach(p => {
+                html += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td>${p.partner || '—'}</td>
+                        <td>${p.level || 'common'}</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn" onclick="editPrize('${p.id}')">✏️</button>
+                            <button class="admin-btn admin-btn-danger" onclick="deletePrize('${p.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+        
+        function renderBadgesTable(container, badges) {
+            if (!badges || badges.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет бейджей</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="admin-table">
+                    <tr><th>Эмодзи</th><th>Название</th><th>Триггер</th><th>Активен</th><th></th></tr>
+            `;
+            
+            badges.forEach(b => {
+                html += `
+                    <tr>
+                        <td>${b.emoji || '🏅'}</td>
+                        <td>${b.name}</td>
+                        <td>${b.trigger_type} ${b.trigger_value || ''}</td>
+                        <td>${b.is_active ? '✅' : '❌'}</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn" onclick="editBadge('${b.id}')">✏️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+        
+        function renderStats(container, stats) {
+            container.innerHTML = `
+                <div class="card">
+                    <h3>📊 Общая статистика</h3>
+                    <div class="stats-grid" style="margin-top: 16px;">
+                        <div class="stat-item"><div class="stat-value">${stats.total_users || 0}</div><div class="stat-label">участников</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.total_workouts || 0}</div><div class="stat-label">тренировок</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.total_km || 0}</div><div class="stat-label">км</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>🏆 Топ тренеров</h3>
+                    <div id="top-coaches-list"></div>
+                </div>
+            `;
+        }
+        
+        // Заглушки для админ-функций
+        window.showAddCoachForm = () => alert('Форма добавления тренера');
+        window.editCoach = (id) => alert(`Редактирование тренера ${id}`);
+        window.deleteCoach = (id) => { if (confirm('Удалить тренера?')) alert(`Тренер ${id} удалён`); };
+        window.showAddPrizeForm = () => alert('Форма добавления приза');
+        window.editPrize = (id) => alert(`Редактирование приза ${id}`);
+        window.deletePrize = (id) => { if (confirm('Удалить приз?')) alert(`Приз ${id} удалён`); };
+        window.editBadge = (id) => alert(`Редактирование бейджа ${id}`);
+        
+        // Инициализация
         loadProfile();
         tg.BackButton.onClick(() => document.querySelector('.nav-item[data-page="profile"]').click());
     </script>
