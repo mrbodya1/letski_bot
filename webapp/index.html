@@ -58,7 +58,7 @@
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             border-radius: 24px;
-            padding: 24px;
+            padding: 20px 16px;
             margin-bottom: 20px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             color: #1a1a2e;
@@ -72,21 +72,22 @@
         }
 
         .avatar {
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
 
         .profile-info h2 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: #1a1a2e;
             margin-bottom: 6px;
@@ -97,9 +98,9 @@
             align-items: center;
             gap: 6px;
             background: linear-gradient(135deg, #FFD700, #FFA500);
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 30px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #1a1a2e;
         }
@@ -107,25 +108,25 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 16px;
         }
 
         .stat-item {
             text-align: center;
-            padding: 12px 6px;
+            padding: 10px 4px;
             background: linear-gradient(135deg, #f5f7fa, #e8ecf1);
             border-radius: 16px;
         }
 
         .stat-value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 800;
             color: #1e3c72;
         }
 
         .stat-label {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
             font-weight: 500;
             text-transform: uppercase;
@@ -140,12 +141,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             padding: 0 4px;
         }
 
         .section-title h3 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -154,49 +155,48 @@
 
         .section-title span {
             background: rgba(30, 60, 114, 0.1);
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #1e3c72;
         }
 
         .badges-container {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .badge {
             background: white;
             border-radius: 16px;
-            padding: 12px 14px;
+            padding: 10px 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(30, 60, 114, 0.1);
         }
 
         .badge-emoji {
-            font-size: 28px;
+            font-size: 24px;
         }
 
         .badge-info h4 {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 2px;
         }
 
         .prize-item {
             background: white;
             border-radius: 18px;
-            padding: 14px;
-            margin-bottom: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(30, 60, 114, 0.1);
             cursor: pointer;
@@ -210,7 +210,7 @@
         }
 
         .prize-emoji {
-            font-size: 32px;
+            font-size: 28px;
         }
 
         .prize-info {
@@ -218,24 +218,25 @@
         }
 
         .prize-info h4 {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .prize-info p {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
 
         .prize-status {
-            font-size: 11px;
-            padding: 4px 12px;
+            font-size: 10px;
+            padding: 4px 8px;
             border-radius: 30px;
             background: #FFD700;
             font-weight: 700;
             color: #1a1a2e;
+            white-space: nowrap;
         }
 
         .prize-status.claimed {
@@ -244,7 +245,7 @@
         }
 
         .prize-arrow {
-            font-size: 18px;
+            font-size: 16px;
             opacity: 0.5;
             transition: all 0.2s;
         }
@@ -257,8 +258,8 @@
         .badge-progress-item {
             background: white;
             border-radius: 18px;
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(30, 60, 114, 0.1);
         }
@@ -266,12 +267,12 @@
         .badge-progress-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .badge-progress-emoji {
-            font-size: 32px;
+            font-size: 28px;
         }
 
         .badge-progress-info {
@@ -279,25 +280,26 @@
         }
 
         .badge-progress-info h4 {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .badge-progress-info p {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
 
         .badge-progress-status {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 700;
             color: #1e3c72;
+            white-space: nowrap;
         }
 
         .progress-bar-container {
-            height: 8px;
+            height: 6px;
             background: rgba(30, 60, 114, 0.1);
             border-radius: 10px;
             overflow: hidden;
@@ -322,10 +324,10 @@
 
         .rating-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 16px;
             background: white;
-            padding: 6px;
+            padding: 4px;
             border-radius: 50px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
@@ -333,8 +335,8 @@
         .rating-tab {
             flex: 1;
             text-align: center;
-            padding: 12px;
-            font-size: 14px;
+            padding: 10px 4px;
+            font-size: 13px;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
@@ -344,7 +346,7 @@
             align-items: center;
             justify-content: center;
             line-height: 1;
-            min-height: 44px;
+            min-height: 40px;
         }
 
         .rating-tab.active {
@@ -362,7 +364,7 @@
         .rating-item {
             display: flex;
             align-items: center;
-            padding: 16px 18px;
+            padding: 12px 14px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
@@ -375,19 +377,20 @@
         }
 
         .rating-place {
-            width: 40px;
+            width: 32px;
             font-weight: 800;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .rating-user {
             flex: 1;
             font-weight: 600;
+            font-size: 14px;
         }
 
         .rating-value {
             font-weight: 800;
-            font-size: 18px;
+            font-size: 16px;
             color: #1e3c72;
         }
 
@@ -395,7 +398,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
@@ -404,18 +407,19 @@
         }
 
         .workout-date {
-            font-size: 13px;
+            font-size: 12px;
             color: #666;
         }
 
         .workout-data {
             font-weight: 700;
+            font-size: 13px;
         }
 
         .workout-pace {
-            font-size: 12px;
+            font-size: 11px;
             background: rgba(30, 60, 114, 0.08);
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 20px;
             color: #1e3c72;
         }
@@ -429,7 +433,7 @@
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+            padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
             display: flex;
             justify-content: space-around;
             border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -441,13 +445,13 @@
             flex-direction: column;
             align-items: center;
             gap: 2px;
-            padding: 6px 8px;
+            padding: 4px 6px;
             border-radius: 40px;
             cursor: pointer;
             transition: all 0.3s;
             color: #666;
             flex: 0 1 auto;
-            min-width: 56px;
+            min-width: 48px;
         }
 
         .nav-item.active {
@@ -456,11 +460,11 @@
         }
 
         .nav-emoji {
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .nav-label {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -489,22 +493,23 @@
         }
 
         .rules-content h2 {
-            margin-bottom: 24px;
-            font-size: 24px;
+            margin-bottom: 20px;
+            font-size: 22px;
             font-weight: 800;
         }
 
         .rules-content h3 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #1e3c72;
         }
 
         .rules-content p {
             color: #444;
-            line-height: 1.6;
+            line-height: 1.5;
             margin-bottom: 8px;
+            font-size: 13px;
         }
 
         .rules-link {
@@ -518,13 +523,13 @@
         .admin-menu {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
 
         .admin-menu-item {
             background: white;
             border-radius: 18px;
-            padding: 20px 12px;
+            padding: 16px 8px;
             text-align: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(30, 60, 114, 0.1);
@@ -538,48 +543,78 @@
         }
 
         .admin-menu-emoji {
-            font-size: 36px;
-            margin-bottom: 8px;
+            font-size: 32px;
+            margin-bottom: 6px;
         }
 
         .admin-menu-label {
             font-weight: 700;
             color: #1e3c72;
+            font-size: 13px;
+        }
+
+        .admin-table-container {
+            width: 100%;
+            margin-bottom: 16px;
+            border-radius: 18px;
+            background: white;
         }
 
         .admin-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
+            word-break: break-word;
         }
 
         .admin-table th {
             text-align: left;
-            padding: 12px 8px;
-            font-size: 12px;
+            padding: 10px 4px;
+            font-size: 11px;
             font-weight: 600;
             color: #666;
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: white;
         }
 
         .admin-table td {
-            padding: 12px 8px;
-            font-size: 14px;
+            padding: 10px 4px;
+            font-size: 12px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            word-break: break-word;
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .admin-table th:first-child,
+        .admin-table td:first-child {
+            padding-left: 8px;
+        }
+
+        .admin-table th:last-child,
+        .admin-table td:last-child {
+            padding-right: 8px;
+            width: 50px;
+            text-align: right;
         }
 
         .admin-actions {
             display: flex;
-            gap: 8px;
+            gap: 2px;
+            justify-content: flex-end;
         }
 
         .admin-btn {
             background: none;
             border: none;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
-            padding: 4px;
+            padding: 4px 2px;
             opacity: 0.7;
             transition: opacity 0.2s;
+            min-width: 28px;
         }
 
         .admin-btn:hover {
@@ -594,37 +629,6 @@
             color: #00C853;
         }
 
-        .admin-form {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .admin-form input,
-        .admin-form select,
-        .admin-form textarea {
-            width: 100%;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(30, 60, 114, 0.2);
-            border-radius: 12px;
-            font-family: 'Onest', sans-serif;
-            font-size: 14px;
-        }
-
-        .admin-form button {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            border: none;
-            padding: 14px 20px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-        }
-
         .admin-back {
             display: flex;
             align-items: center;
@@ -635,106 +639,80 @@
             font-weight: 600;
         }
 
-        .toggle-switch {
+        /* Модальные окна */
+        .admin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
         }
 
-        .toggle-switch input {
-            width: auto;
-            margin: 0;
-        }
-
-        @media (max-width: 360px) {
-            .nav-item {
-                padding: 4px 4px;
-                min-width: 48px;
-            }
-            .nav-emoji {
-                font-size: 20px;
-            }
-            .nav-label {
-                font-size: 8px;
-            }
-            .rating-tab {
-                font-size: 12px;
-                padding: 10px 2px;
-                min-height: 40px;
-            }
-            .admin-menu {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Адаптивные таблицы для админки */
-        .admin-table-container {
+        .admin-modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            max-width: 400px;
             width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .admin-modal-content h3 {
             margin-bottom: 16px;
-            border-radius: 18px;
-            background: white;
+            font-size: 18px;
         }
-        
-        .admin-table {
+
+        .admin-modal-content input,
+        .admin-modal-content select {
             width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            word-break: break-word;
-        }
-        
-        .admin-table th {
-            text-align: left;
-            padding: 10px 4px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #666;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            background: white;
-        }
-        
-        .admin-table td {
-            padding: 10px 4px;
-            font-size: 12px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            word-break: break-word;
-        }
-        
-        .admin-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        /* Ширина колонок для разных таблиц */
-        .admin-table th:first-child,
-        .admin-table td:first-child {
-            padding-left: 8px;
-        }
-        
-        .admin-table th:last-child,
-        .admin-table td:last-child {
-            padding-right: 8px;
-            width: 50px;
-            text-align: right;
-        }
-        
-        /* Кнопки в таблице */
-        .admin-actions {
-            display: flex;
-            gap: 2px;
-            justify-content: flex-end;
-        }
-        
-        .admin-btn {
-            background: none;
-            border: none;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
             font-size: 16px;
-            cursor: pointer;
-            padding: 4px 2px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            min-width: 28px;
         }
-        
-        /* Для очень узких экранов */
+
+        .admin-modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .admin-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .admin-modal-buttons button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
         @media (max-width: 380px) {
             .admin-table th {
                 font-size: 10px;
@@ -749,6 +727,14 @@
             .admin-btn {
                 font-size: 14px;
                 min-width: 24px;
+            }
+            
+            .nav-emoji {
+                font-size: 18px;
+            }
+            
+            .nav-label {
+                font-size: 8px;
             }
         }
 
@@ -816,7 +802,7 @@
                 <div class="section-title">
                     <h3>📊 Последние тренировки</h3>
                 </div>
-                <div class="card" id="recent-workouts" style="padding: 8px 20px;">
+                <div class="card" id="recent-workouts" style="padding: 8px 16px;">
                     <div class="empty-state">Нет тренировок</div>
                 </div>
             </div>
@@ -886,7 +872,6 @@
                 <div class="logo">LETSKI<span>school</span></div>
             </div>
             <div id="admin-content">
-                <!-- Главное меню админа -->
                 <div id="admin-main-menu">
                     <div class="admin-menu">
                         <div class="admin-menu-item" onclick="showAdminSection('schedule')">
@@ -923,8 +908,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Контейнер для разделов админки -->
                 <div id="admin-section-content"></div>
             </div>
         </div>
@@ -970,7 +953,6 @@
         let currentUser = null;
         let isAdmin = false;
         
-        // Навигация
         const pages = {
             profile: document.getElementById('page-profile'),
             badges: document.getElementById('page-badges'),
@@ -1038,7 +1020,6 @@
                 currentUser = data;
                 isAdmin = data.role === 'admin';
                 
-                // Показываем вкладку Админ если нужно
                 if (isAdmin) {
                     document.getElementById('nav-admin').style.display = 'flex';
                 }
@@ -1056,7 +1037,6 @@
                     document.getElementById('stat-pace').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 }
                 
-                // Бейджи
                 const badgesList = document.getElementById('badges-list');
                 if (data.badges && data.badges.length > 0) {
                     badgesList.innerHTML = data.badges.map(b => `
@@ -1071,7 +1051,6 @@
                     document.getElementById('badges-count').textContent = '0';
                 }
                 
-                // Призы
                 const prizesList = document.getElementById('prizes-list');
                 const myPrizes = data.prizes || [];
                 if (myPrizes.length > 0) {
@@ -1098,7 +1077,6 @@
                     document.getElementById('prizes-count').textContent = '0';
                 }
                 
-                // Тренировки
                 const workoutsDiv = document.getElementById('recent-workouts');
                 if (data.workouts && data.workouts.length > 0) {
                     workoutsDiv.innerHTML = data.workouts.slice(0, 5).map(w => `
@@ -1519,17 +1497,18 @@
             
             let html = `
                 <div style="margin-bottom: 16px;">
-                    <button class="admin-form button" onclick="showAddCoachForm()" style="width: auto; padding: 12px 20px;">+ Добавить тренера</button>
+                    <button class="admin-btn btn-primary" onclick="showAddCoachForm()" style="padding: 12px 20px; border-radius: 40px;">+ Добавить тренера</button>
                 </div>
-                <table class="admin-table">
-                    <tr><th>Имя</th><th>Рейтинг</th><th></th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Имя</th><th>Рейтинг</th><th></th></tr>
             `;
             
             coaches.forEach(c => {
                 html += `
                     <tr>
                         <td>${c.full_name}</td>
-                        <td>${c.avg_rating_pro?.toFixed(1) || '0.0'} ⭐ (${c.total_ratings || 0})</td>
+                        <td>${c.avg_rating_pro?.toFixed(1) || '0.0'} ⭐</td>
                         <td class="admin-actions">
                             <button class="admin-btn" onclick="editCoach('${c.id}')">✏️</button>
                             <button class="admin-btn admin-btn-danger" onclick="deleteCoach('${c.id}')">🗑️</button>
@@ -1538,7 +1517,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
         
@@ -1550,7 +1529,7 @@
             
             let html = `
                 <div style="margin-bottom: 16px;">
-                    <button class="admin-form button" onclick="showAddPrizeForm()" style="width: auto; padding: 12px 20px;">+ Добавить приз</button>
+                    <button class="admin-btn btn-primary" onclick="showAddPrizeForm()" style="padding: 12px 20px; border-radius: 40px;">+ Добавить приз</button>
                 </div>
                 <div class="admin-table-container">
                     <table class="admin-table">
@@ -1583,11 +1562,11 @@
             
             let html = `
                 <div style="margin-bottom: 16px;">
-                    <button class="admin-form button" onclick="showAddBadgeForm()" style="width: auto; padding: 12px 20px;">+ Добавить бейдж</button>
+                    <button class="admin-btn btn-primary" onclick="showAddBadgeForm()" style="padding: 12px 20px; border-radius: 40px;">+ Добавить бейдж</button>
                 </div>
                 <div class="admin-table-container">
                     <table class="admin-table">
-                        <tr><th>Эмодзи</th><th>Название</th><th>Триггер</th><th>Активен</th><th></th></tr>
+                        <tr><th>Эм</th><th>Название</th><th>Триггер</th><th></th></tr>
             `;
             
             badges.forEach(b => {
@@ -1596,7 +1575,6 @@
                         <td>${b.emoji || '🏅'}</td>
                         <td>${b.name}</td>
                         <td>${b.trigger_type} ${b.trigger_value || ''}</td>
-                        <td>${b.is_active ? '✅' : '❌'}</td>
                         <td class="admin-actions">
                             <button class="admin-btn" onclick="editBadge('${b.id}')">✏️</button>
                         </td>
@@ -1614,7 +1592,7 @@
                 topCoachesHtml = stats.top_coaches.map(c => `
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
                         <span>${c.full_name}</span>
-                        <span>⭐ ${c.avg_rating_pro?.toFixed(1) || '0.0'} (${c.total_ratings || 0})</span>
+                        <span>⭐ ${c.avg_rating_pro?.toFixed(1) || '0.0'}</span>
                     </div>
                 `).join('');
             } else {
@@ -1637,19 +1615,15 @@
             `;
         }
         
-        // ========== АДМИН-ФУНКЦИИ ДЛЯ РАБОТЫ С API ==========
-
-        // --- Тренеры ---
+        // ========== АДМИН-ФУНКЦИИ ==========
         window.showAddCoachForm = () => {
             const name = prompt('Введите ФИО тренера:');
             if (!name) return;
             
-            const telegramId = prompt('Telegram ID (опционально):');
-            
             fetch(`${API_BASE}/api/admin/coaches?user_id=${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ full_name: name, telegram_id: telegramId ? parseInt(telegramId) : null })
+                body: JSON.stringify({ full_name: name })
             })
             .then(r => r.json())
             .then(data => {
@@ -1700,7 +1674,6 @@
             .catch(e => alert('Ошибка: ' + e.message));
         };
         
-        // --- Призы ---
         window.showAddPrizeForm = () => {
             const formHtml = `
                 <div class="admin-modal" onclick="this.remove()">
@@ -1715,23 +1688,23 @@
                         <select id="prize-type">
                             <option value="discount">Скидка</option>
                             <option value="gift">Подарок</option>
-                            <option value="slot">Слот (место на забег/кэмп)</option>
+                            <option value="slot">Слот</option>
                             <option value="merch">Мерч</option>
                             <option value="service">Услуга</option>
                         </select>
                         
-                        <input type="text" id="prize-value" placeholder="Ценность (например, 20% или Бесплатно)">
+                        <input type="text" id="prize-value" placeholder="Ценность (20% или Бесплатно)">
                         
                         <label>Уровень редкости:</label>
                         <select id="prize-level">
-                            <option value="common">Обычный (4-9 тренировок)</option>
-                            <option value="rare">Редкий (10-16 тренировок)</option>
-                            <option value="epic">Эпический (17-23 тренировки)</option>
-                            <option value="legendary">Легендарный (24-29 тренировок)</option>
+                            <option value="common">Обычный (4-9 тр)</option>
+                            <option value="rare">Редкий (10-16 тр)</option>
+                            <option value="epic">Эпический (17-23 тр)</option>
+                            <option value="legendary">Легендарный (24-29 тр)</option>
                         </select>
                         
                         <input type="url" id="prize-link" placeholder="Ссылка (https://...)">
-                        <input type="number" id="prize-quantity" placeholder="Количество (пусто = безлимитно)">
+                        <input type="number" id="prize-quantity" placeholder="Количество (пусто = ∞)">
                         
                         <label style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="prize-active" checked> Приз активен
@@ -1833,35 +1806,34 @@
             .catch(e => alert('Ошибка: ' + e.message));
         };
         
-        // --- Бейджи ---
         window.showAddBadgeForm = () => {
             const formHtml = `
                 <div class="admin-modal" onclick="this.remove()">
                     <div class="admin-modal-content" onclick="event.stopPropagation()">
                         <h3>Добавить бейдж</h3>
                         
-                        <input type="text" id="badge-type" placeholder="Уникальный ID (например, streak_16)">
+                        <input type="text" id="badge-type" placeholder="Уникальный ID (streak_16)">
                         <input type="text" id="badge-name" placeholder="Название бейджа">
-                        <input type="text" id="badge-emoji" placeholder="Эмодзи (например, 🔥)">
+                        <input type="text" id="badge-emoji" placeholder="Эмодзи (🔥)">
                         <input type="text" id="badge-description" placeholder="Описание">
-                        <input type="text" id="badge-compliment" placeholder="Комплимент при получении">
+                        <input type="text" id="badge-compliment" placeholder="Комплимент">
                         
                         <label>Тип триггера:</label>
                         <select id="badge-trigger">
                             <option value="first_workout">Первая тренировка</option>
                             <option value="streak">Серия воскресений</option>
-                            <option value="total_km">Суммарный километраж</option>
-                            <option value="total_workouts">Количество тренировок</option>
+                            <option value="total_km">Суммарный км</option>
+                            <option value="total_workouts">Кол-во тренировок</option>
                         </select>
                         
-                        <input type="number" id="badge-trigger-value" placeholder="Значение триггера (например, 4)">
+                        <input type="number" id="badge-trigger-value" placeholder="Значение (4, 100, 10)">
                         
                         <label style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="badge-active" checked> Бейдж активен
                         </label>
                         
                         <p style="font-size: 12px; color: #666; margin-bottom: 16px;">
-                            ⚠️ Новые типы триггеров нужно добавлять в код функции check_and_award_badges
+                            ⚠️ Новые типы триггеров нужно добавить в код
                         </p>
                         
                         <div class="admin-modal-buttons">
