@@ -585,20 +585,28 @@ async def delete_rating_admin(rating_id: str):
 
 async def get_admin_stats():
     """Получить статистику для админ-дашборда"""
-    # Общее количество
-    users = supabase.table("profiles").select("id", count="exact").execute()
-    workouts = supabase.table("workouts").select("id", count="exact").execute()
-    
-    # Сумма км
-    km_result = supabase.table("profiles").select("total_km").execute()
-    total_km = sum(p.get("total_km", 0) for p in km_result.data) if km_result.data else 0
-    
-    # Топ тренеров
-    top_coaches = supabase.table("coaches").select("full_name, avg_rating_pro, total_ratings").order("avg_rating_pro", desc=True).limit(3).execute()
-    
-    return {
-        "total_users": users.count if hasattr(users, 'count') else len(users.data) if users.data else 0,
-        "total_workouts": workouts.count if hasattr(workouts, 'count') else len(workouts.data) if workouts.data else 0,
-        "total_km": round(total_km, 1),
-        "top_coaches": top_coaches.data if top_coaches.data else []
-    }
+    try:
+        # Общее количество участников (всех)
+        users = supabase.table("profiles").select("id", count="exact").execute()
+        total_users = users.count if hasattr(users, 'count') else len(users.data) if users.data else 0
+        
+        # Тренировки
+        workouts = supabase.table("workouts").select("id", count="exact").execute()
+        total_workouts = workouts.count if hasattr(workouts, 'count') else len(workouts.data) if workouts.data else 0
+        
+        # Сумма км
+        km_result = supabase.table("profiles").select("total_km").execute()
+        total_km = sum(p.get("total_km", 0) for p in km_result.data) if km_result.data else 0
+        
+        # Топ тренеров
+        top_coaches = supabase.table("coaches").select("full_name, avg_rating_pro, total_ratings").order("avg_rating_pro", desc=True).limit(3).execute()
+        
+        return {
+            "total_users": total_users,
+            "total_workouts": total_workouts,
+            "total_km": round(total_km, 1),
+            "top_coaches": top_coaches.data if top_coaches.data else []
+        }
+    except Exception as e:
+        print(f"Error in get_admin_stats: {e}")
+        return {"total_users": 0, "total_workouts": 0, "total_km": 0, "top_coaches": []}
