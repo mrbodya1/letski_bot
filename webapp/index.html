@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
     <title>Letski School</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -27,9 +27,10 @@
         }
 
         .container {
-            max-width: 480px;
+            max-width: 100%;
             margin: 0 auto;
-            padding: 20px 16px;
+            padding: 20px 12px;
+            overflow-x: hidden;
         }
 
         .header {
@@ -669,8 +670,6 @@
         /* Адаптивные таблицы для админки */
         .admin-table-container {
             width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
             margin-bottom: 16px;
             border-radius: 18px;
             background: white;
@@ -678,15 +677,15 @@
         
         .admin-table {
             width: 100%;
-            min-width: 600px;
             border-collapse: collapse;
-            white-space: nowrap;
+            table-layout: fixed;
+            word-break: break-word;
         }
         
         .admin-table th {
             text-align: left;
-            padding: 12px 8px;
-            font-size: 12px;
+            padding: 10px 4px;
+            font-size: 11px;
             font-weight: 600;
             color: #666;
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -694,131 +693,63 @@
         }
         
         .admin-table td {
-            padding: 12px 8px;
-            font-size: 14px;
+            padding: 10px 4px;
+            font-size: 12px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            white-space: nowrap;
+            word-break: break-word;
         }
         
         .admin-table tr:last-child td {
             border-bottom: none;
         }
         
-        /* Для узких экранов - уменьшаем отступы */
-        @media (max-width: 400px) {
-            .admin-table th,
-            .admin-table td {
-                padding: 8px 4px;
-                font-size: 12px;
-            }
-            
-            .admin-table {
-                min-width: 500px;
-            }
+        /* Ширина колонок для разных таблиц */
+        .admin-table th:first-child,
+        .admin-table td:first-child {
+            padding-left: 8px;
+        }
+        
+        .admin-table th:last-child,
+        .admin-table td:last-child {
+            padding-right: 8px;
+            width: 50px;
+            text-align: right;
         }
         
         /* Кнопки в таблице */
         .admin-actions {
             display: flex;
-            gap: 4px;
-            flex-wrap: nowrap;
+            gap: 2px;
+            justify-content: flex-end;
         }
         
         .admin-btn {
             background: none;
             border: none;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
-            padding: 4px;
+            padding: 4px 2px;
             opacity: 0.7;
             transition: opacity 0.2s;
-            min-width: 32px;
+            min-width: 28px;
         }
         
-        .admin-btn:hover {
-            opacity: 1;
-        }
-        
-        .admin-btn-danger {
-            color: #e74c3c;
-        }
-        
-        .admin-btn-success {
-            color: #00C853;
-        }
-        
-        /* Модальные окна - адаптив */
-        .admin-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 16px;
-        }
-        
-        .admin-modal-content {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            max-width: 400px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .admin-modal-content h3 {
-            margin-bottom: 16px;
-            font-size: 18px;
-        }
-        
-        .admin-modal-content input,
-        .admin-modal-content select {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 16px;
-        }
-        
-        .admin-modal-content label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .admin-modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-        
-        .admin-modal-buttons button {
-            flex: 1;
-            padding: 14px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 16px;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
+        /* Для очень узких экранов */
+        @media (max-width: 380px) {
+            .admin-table th {
+                font-size: 10px;
+                padding: 8px 2px;
+            }
+            
+            .admin-table td {
+                font-size: 11px;
+                padding: 8px 2px;
+            }
+            
+            .admin-btn {
+                font-size: 14px;
+                min-width: 24px;
+            }
         }
 
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
