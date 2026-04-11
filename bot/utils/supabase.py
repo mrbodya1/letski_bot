@@ -386,3 +386,219 @@ async def check_and_award_prize(user_id: str, total_workouts: int):
     }).execute()
     
     return prize, level_name
+
+# ========== АДМИН-ФУНКЦИИ ==========
+
+async def get_all_coaches_admin():
+    """Получить всех тренеров с полной информацией"""
+    result = supabase.table("coaches").select("*").order("full_name").execute()
+    return result.data if result.data else []
+
+
+async def create_coach(full_name: str, telegram_id: int = None):
+    """Создать нового тренера"""
+    data = {"full_name": full_name}
+    if telegram_id:
+        data["telegram_id"] = telegram_id
+    
+    result = supabase.table("coaches").insert(data).execute()
+    return result.data[0] if result.data else None
+
+
+async def update_coach(coach_id: str, data: dict):
+    """Обновить тренера"""
+    allowed = ["full_name", "telegram_id"]
+    update_data = {k: v for k, v in data.items() if k in allowed}
+    
+    if not update_data:
+        return None
+    
+    result = supabase.table("coaches").update(update_data).eq("id", coach_id).execute()
+    return result.data[0] if result.data else None
+
+
+async def delete_coach(coach_id: str):
+    """Удалить тренера"""
+    result = supabase.table("coaches").delete().eq("id", coach_id).execute()
+    return True if result.data else False
+
+
+async def get_all_prizes_admin():
+    """Получить все призы (активные и неактивные)"""
+    result = supabase.table("prizes_pool").select("*").order("created_at", desc=True).execute()
+    return result.data if result.data else []
+
+
+async def create_prize_full(data: dict):
+    """Создать приз со всеми полями"""
+    allowed = ["name", "description", "partner", "type", "value", "level", 
+               "promo_code", "link_url", "is_active", "total_quantity", "remaining_quantity"]
+    insert_data = {k: v for k, v in data.items() if k in allowed}
+    
+    if not insert_data.get("name"):
+        return None
+    
+    # Генерируем промокод если не указан
+    if not insert_data.get("promo_code"):
+        import random
+        import string
+        insert_data["promo_code"] = f"LETSKI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+    
+    result = supabase.table("prizes_pool").insert(insert_data).execute()
+    return result.data[0] if result.data else None
+
+
+async def update_prize(prize_id: str, data: dict):
+    """Обновить приз"""
+    allowed = ["name", "description", "partner", "type", "value", "level", 
+               "promo_code", "link_url", "is_active", "total_quantity", "remaining_quantity"]
+    update_data = {k: v for k, v in data.items() if k in allowed}
+    
+    if not update_data:
+        return None
+    
+    result = supabase.table("prizes_pool").update(update_data).eq("id", prize_id).execute()
+    return result.data[0] if result.data else None
+
+
+async def delete_prize(prize_id: str):
+    """Удалить приз (только если не выдан)"""
+    # Проверяем, не выдан ли приз
+    issued = supabase.table("user_prizes").select("id").eq("prize_id", prize_id).execute()
+    if issued.data:
+        return False  # Нельзя удалить выданный приз
+    
+    result = supabase.table("prizes_pool").delete().eq("id", prize_id).execute()
+    return True if result.data else False
+
+
+async def get_badges_catalog_full():
+    """Получить полный каталог бейджей (включая неактивные)"""
+    result = supabase.table("badges_catalog").select("*").order("created_at").execute()
+    return result.data if result.data else []
+
+
+async def update_badge(badge_id: str, data: dict):
+    """Обновить бейдж"""
+    allowed = ["name", "emoji", "description", "compliment", "trigger_type", 
+               "trigger_value", "is_active"]
+    update_data = {k: v for k, v in data.items() if k in allowed}
+    
+    if not update_data:
+        return None
+    
+    result = supabase.table("badges_catalog").update(update_data).eq("id", badge_id).execute()
+    return result.data[0] if result.data else None
+
+
+async def get_schedule_admin():
+    """Получить расписание с информацией о тренерах"""
+    result = supabase.table("sunday_schedule").select("*, coaches(full_name)").order("sunday_date", desc=True).limit(30).execute()
+    return result.data if result.data else []
+
+
+async def upsert_schedule(data: dict):
+    """Создать или обновить расписание"""
+    sunday_date = data.get("sunday_date")
+    if not sunday_date:
+        return None
+    
+    # Проверяем существование
+    existing = supabase.table("sunday_schedule").select("id").eq("sunday_date", sunday_date).execute()
+    
+    insert_data = {
+        "sunday_date": sunday_date,
+        "coach_id": data.get("coach_id"),
+        "format": data.get("format"),
+        "location": data.get("location"),
+        "start_time": data.get("start_time"),
+        "description": data.get("description"),
+        "status": data.get("status", "scheduled")
+    }
+    
+    if existing.data:
+        result = supabase.table("sunday_schedule").update(insert_data).eq("sunday_date", sunday_date).execute()
+    else:
+        result = supabase.table("sunday_schedule").insert(insert_data).execute()
+    
+    return result.data[0] if result.data else None
+
+
+async def delete_schedule(schedule_id: str):
+    """Удалить расписание"""
+    result = supabase.table("sunday_schedule").delete().eq("id", schedule_id).execute()
+    return True if result.data else False
+
+
+async def get_all_users_admin():
+    """Получить всех участников"""
+    result = supabase.table("profiles").select("*").order("registered_at", desc=True).execute()
+    return result.data if result.data else []
+
+
+async def update_user_admin(user_id: str, data: dict):
+    """Обновить участника (только админские поля)"""
+    allowed = ["full_name", "role", "sunday_streak", "total_km", "total_sundays"]
+    update_data = {k: v for k, v in data.items() if k in allowed}
+    
+    if not update_data:
+        return None
+    
+    result = supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+    return result.data[0] if result.data else None
+
+
+async def get_all_workouts_admin(limit: int = 50):
+    """Получить все тренировки"""
+    result = supabase.table("workouts").select("*, profiles(full_name), coaches(full_name)").order("created_at", desc=True).limit(limit).execute()
+    return result.data if result.data else []
+
+
+async def delete_workout_admin(workout_id: str):
+    """Удалить тренировку"""
+    # Сначала получаем данные для обновления статистики
+    workout = supabase.table("workouts").select("user_id, distance_km").eq("id", workout_id).execute()
+    
+    if workout.data:
+        w = workout.data[0]
+        # Уменьшаем статистику
+        supabase.table("profiles").update({
+            "total_sundays": supabase.raw("total_sundays - 1"),
+            "total_km": supabase.raw(f"total_km - {w['distance_km']}")
+        }).eq("id", w["user_id"]).execute()
+    
+    result = supabase.table("workouts").delete().eq("id", workout_id).execute()
+    return True if result.data else False
+
+
+async def get_all_ratings_admin(limit: int = 50):
+    """Получить все оценки"""
+    result = supabase.table("coach_ratings").select("*, profiles(full_name), coaches(full_name)").order("created_at", desc=True).limit(limit).execute()
+    return result.data if result.data else []
+
+
+async def delete_rating_admin(rating_id: str):
+    """Удалить оценку"""
+    result = supabase.table("coach_ratings").delete().eq("id", rating_id).execute()
+    return True if result.data else False
+
+
+async def get_admin_stats():
+    """Получить статистику для админ-дашборда"""
+    # Общее количество
+    users = supabase.table("profiles").select("id", count="exact").execute()
+    workouts = supabase.table("workouts").select("id", count="exact").execute()
+    
+    # Сумма км
+    km_result = supabase.table("profiles").select("total_km").execute()
+    total_km = sum(p.get("total_km", 0) for p in km_result.data) if km_result.data else 0
+    
+    # Топ тренеров
+    top_coaches = supabase.table("coaches").select("full_name, avg_rating_pro, total_ratings").order("avg_rating_pro", desc=True).limit(3).execute()
+    
+    return {
+        "total_users": users.count if hasattr(users, 'count') else len(users.data) if users.data else 0,
+        "total_workouts": workouts.count if hasattr(workouts, 'count') else len(workouts.data) if workouts.data else 0,
+        "total_km": round(total_km, 1),
+        "top_coaches": top_coaches.data if top_coaches.data else []
+    }
