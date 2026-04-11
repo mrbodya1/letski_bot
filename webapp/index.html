@@ -1309,6 +1309,9 @@
             }
             
             let html = `
+                <div style="margin-bottom: 16px;">
+                    <button class="admin-form button" onclick="showAddBadgeForm()" style="width: auto; padding: 12px 20px;">+ Добавить бейдж</button>
+                </div>
                 <table class="admin-table">
                     <tr><th>Эмодзи</th><th>Название</th><th>Триггер</th><th>Активен</th><th></th></tr>
             `;
@@ -1428,16 +1431,30 @@
             const name = prompt('Название приза:');
             if (!name) return;
             
+            const description = prompt('Описание:') || '';
             const partner = prompt('Партнёр:') || '';
             const type = prompt('Тип (discount, gift, slot, merch, service):') || 'gift';
             const value = prompt('Ценность (например, "20%" или "Бесплатно"):') || '';
             const level = prompt('Уровень (common, rare, epic, legendary):') || 'common';
             const link = prompt('Ссылка (опционально):') || null;
+            const quantity = prompt('Количество (пусто = безлимитно):');
+            const isActive = confirm('Приз активен? (OK - да, Отмена - нет)');
+            
+            const data = { 
+                name, description, partner, type, value, level, 
+                link_url: link, 
+                is_active: isActive 
+            };
+            
+            if (quantity) {
+                data.total_quantity = parseInt(quantity);
+                data.remaining_quantity = parseInt(quantity);
+            }
             
             fetch(`${API_BASE}/api/admin/prizes?user_id=${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, partner, type, value, level, link_url: link })
+                body: JSON.stringify(data)
             })
             .then(r => r.json())
             .then(data => {
@@ -1453,12 +1470,18 @@
         
         window.editPrize = (id) => {
             const name = prompt('Новое название приза:');
-            if (!name) return;
+            if (name === null) return;
+            
+            const isActive = confirm('Приз активен? (OK - да, Отмена - нет)');
+            
+            const data = {};
+            if (name) data.name = name;
+            data.is_active = isActive;
             
             fetch(`${API_BASE}/api/admin/prizes/${id}?user_id=${userId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
+                body: JSON.stringify(data)
             })
             .then(r => r.json())
             .then(data => {
@@ -1489,17 +1512,37 @@
         };
         
         // --- Бейджи ---
-        window.editBadge = (id) => {
-            const name = prompt('Новое название бейджа:');
+        window.showAddBadgeForm = () => {
+            const name = prompt('Название бейджа:');
             if (!name) return;
             
             const emoji = prompt('Эмодзи:') || '🏅';
+            const description = prompt('Описание:') || '';
+            const compliment = prompt('Комплимент при получении:') || 'Поздравляем!';
+            const triggerType = prompt('Тип триггера (first_workout, streak, total_km, total_workouts):') || 'streak';
+            const triggerValue = prompt('Значение триггера (например, 4):') || null;
             const isActive = confirm('Бейдж активен? (OK - да, Отмена - нет)');
+            
+            // Временно через alert, т.к. эндпоинт POST для бейджей ещё не готов
+            alert('Функция в разработке. Пока добавьте бейдж через SQL.');
+        };
+        
+        window.editBadge = (id) => {
+            const name = prompt('Новое название бейджа:');
+            if (name === null) return;
+            
+            const emoji = prompt('Новый эмодзи:');
+            const isActive = confirm('Бейдж активен? (OK - да, Отмена - нет)');
+            
+            const data = {};
+            if (name) data.name = name;
+            if (emoji) data.emoji = emoji;
+            data.is_active = isActive;
             
             fetch(`${API_BASE}/api/admin/badges/${id}?user_id=${userId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, emoji, is_active: isActive })
+                body: JSON.stringify(data)
             })
             .then(r => r.json())
             .then(data => {
