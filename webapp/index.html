@@ -1220,7 +1220,7 @@
             const container = document.getElementById('admin-dynamic-content');
             
             try {
-                const response = await fetch(`${API_BASE}/api/admin/${section}`);
+                const response = await fetch(`${API_BASE}/api/admin/${section}?user_id=${userId}`);
                 const data = await response.json();
                 
                 if (section === 'coaches') {
@@ -1332,6 +1332,18 @@
         }
         
         function renderStats(container, stats) {
+            let topCoachesHtml = '';
+            if (stats.top_coaches && stats.top_coaches.length > 0) {
+                topCoachesHtml = stats.top_coaches.map(c => `
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                        <span>${c.full_name}</span>
+                        <span>⭐ ${c.avg_rating_pro?.toFixed(1) || '0.0'} (${c.total_ratings || 0})</span>
+                    </div>
+                `).join('');
+            } else {
+                topCoachesHtml = '<div class="empty-state">Нет оценок</div>';
+            }
+            
             container.innerHTML = `
                 <div class="card">
                     <h3>📊 Общая статистика</h3>
@@ -1343,19 +1355,163 @@
                 </div>
                 <div class="card">
                     <h3>🏆 Топ тренеров</h3>
-                    <div id="top-coaches-list"></div>
+                    ${topCoachesHtml}
                 </div>
             `;
         }
         
-        // Заглушки для админ-функций
-        window.showAddCoachForm = () => alert('Форма добавления тренера');
-        window.editCoach = (id) => alert(`Редактирование тренера ${id}`);
-        window.deleteCoach = (id) => { if (confirm('Удалить тренера?')) alert(`Тренер ${id} удалён`); };
-        window.showAddPrizeForm = () => alert('Форма добавления приза');
-        window.editPrize = (id) => alert(`Редактирование приза ${id}`);
-        window.deletePrize = (id) => { if (confirm('Удалить приз?')) alert(`Приз ${id} удалён`); };
-        window.editBadge = (id) => alert(`Редактирование бейджа ${id}`);
+        // ========== АДМИН-ФУНКЦИИ ДЛЯ РАБОТЫ С API ==========
+
+        // --- Тренеры ---
+        window.showAddCoachForm = () => {
+            const name = prompt('Введите ФИО тренера:');
+            if (!name) return;
+            
+            const telegramId = prompt('Telegram ID (опционально):');
+            
+            fetch(`${API_BASE}/api/admin/coaches?user_id=${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full_name: name, telegram_id: telegramId ? parseInt(telegramId) : null })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Тренер добавлен!');
+                    showAdminSection('coaches');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+        
+        window.editCoach = (id) => {
+            const name = prompt('Новое ФИО тренера:');
+            if (!name) return;
+            
+            fetch(`${API_BASE}/api/admin/coaches/${id}?user_id=${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full_name: name })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Тренер обновлён!');
+                    showAdminSection('coaches');
+                } else {
+                    alert('Ошибка обновления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+        
+        window.deleteCoach = (id) => {
+            if (!confirm('Удалить тренера?')) return;
+            
+            fetch(`${API_BASE}/api/admin/coaches/${id}?user_id=${userId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Тренер удалён!');
+                    showAdminSection('coaches');
+                } else {
+                    alert('Ошибка удаления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+        
+        // --- Призы ---
+        window.showAddPrizeForm = () => {
+            const name = prompt('Название приза:');
+            if (!name) return;
+            
+            const partner = prompt('Партнёр:') || '';
+            const type = prompt('Тип (discount, gift, slot, merch, service):') || 'gift';
+            const value = prompt('Ценность (например, "20%" или "Бесплатно"):') || '';
+            const level = prompt('Уровень (common, rare, epic, legendary):') || 'common';
+            const link = prompt('Ссылка (опционально):') || null;
+            
+            fetch(`${API_BASE}/api/admin/prizes?user_id=${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, partner, type, value, level, link_url: link })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Приз добавлен!');
+                    showAdminSection('prizes');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+        
+        window.editPrize = (id) => {
+            const name = prompt('Новое название приза:');
+            if (!name) return;
+            
+            fetch(`${API_BASE}/api/admin/prizes/${id}?user_id=${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Приз обновлён!');
+                    showAdminSection('prizes');
+                } else {
+                    alert('Ошибка обновления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+        
+        window.deletePrize = (id) => {
+            if (!confirm('Удалить приз?')) return;
+            
+            fetch(`${API_BASE}/api/admin/prizes/${id}?user_id=${userId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Приз удалён!');
+                    showAdminSection('prizes');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'возможно, приз уже выдан'));
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+        
+        // --- Бейджи ---
+        window.editBadge = (id) => {
+            const name = prompt('Новое название бейджа:');
+            if (!name) return;
+            
+            const emoji = prompt('Эмодзи:') || '🏅';
+            const isActive = confirm('Бейдж активен? (OK - да, Отмена - нет)');
+            
+            fetch(`${API_BASE}/api/admin/badges/${id}?user_id=${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, emoji, is_active: isActive })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Бейдж обновлён!');
+                    showAdminSection('badges');
+                } else {
+                    alert('Ошибка обновления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
         
         // Инициализация
         loadProfile();
