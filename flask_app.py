@@ -464,17 +464,25 @@ def api_admin_delete_rating(rating_id):
     return {"success": True} if result else {"error": "Failed to delete"}, 500
 
 
-@app.route('/api/admin/stats')
-def api_admin_stats():
-    """Получить статистику для дашборда"""
-    if not _is_admin_request(request):
-        return {"error": "Unauthorized"}, 403
+async def get_admin_stats():
+    """Получить статистику для админ-дашборда"""
+    # Общее количество (исключаем админов)
+    users = supabase.table("profiles").select("id", count="exact").neq("role", "admin").execute()
+    workouts = supabase.table("workouts").select("id", count="exact").execute()
     
-    async def get_data():
-        from bot.utils.supabase import get_admin_stats
-        return await get_admin_stats()
+    # Сумма км (исключаем админов)
+    km_result = supabase.table("profiles").select("total_km").neq("role", "admin").execute()
+    total_km = sum(p.get("total_km", 0) for p in km_result.data) if km_result.data else 0
     
-    return asyncio.run(get_data())
+    # Топ тренеров
+    top_coaches = supabase.table("coaches").select("full_name, avg_rating_pro, total_ratings").order("avg_rating_pro", desc=True).limit(3).execute()
+    
+    return {
+        "total_users": users.count if hasattr(users, 'count') else len(users.data) if users.data else 0,
+        "total_workouts": workouts.count if hasattr(workouts, 'count') else len(workouts.data) if workouts.data else 0,
+        "total_km": round(total_km, 1),
+        "top_coaches": top_coaches.data if top_coaches.data else []
+    }
 
 
 def _is_admin_request(req):
@@ -483,9 +491,13 @@ def _is_admin_request(req):
     if not user_id:
         return False
     
-    # Здесь можно добавить проверку через БД
-    # Пока возвращаем True, т.к. фронтенд уже проверяет isAdmin
-    return True
+    # Проверяем через БД
+    async def check():
+        from bot.utils.supabase import get_profile
+        profile = await get_profile(int(user_id))
+        return profile and profile.get('role') == 'admin'
+    
+    return asyncio.run(check())
 
 
 # Импортируем хендлеры
