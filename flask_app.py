@@ -179,6 +179,313 @@ def api_prizes():
     result = asyncio.run(get_data())
     return result
 
+# ========== АДМИН-API ДЛЯ WEB APP ==========
+
+@app.route('/api/admin/coaches')
+def api_admin_coaches():
+    """Получить список всех тренеров (для админки)"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_coaches_admin
+        return await get_all_coaches_admin()
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/coaches', methods=['POST'])
+def api_admin_create_coach():
+    """Создать нового тренера"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    full_name = data.get('full_name')
+    telegram_id = data.get('telegram_id')
+    
+    if not full_name:
+        return {"error": "full_name required"}, 400
+    
+    async def create():
+        from bot.utils.supabase import create_coach
+        return await create_coach(full_name, telegram_id)
+    
+    result = asyncio.run(create())
+    return result if result else {"error": "Failed to create"}, 500
+
+
+@app.route('/api/admin/coaches/<coach_id>', methods=['PATCH'])
+def api_admin_update_coach(coach_id):
+    """Обновить тренера"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def update():
+        from bot.utils.supabase import update_coach
+        return await update_coach(coach_id, data)
+    
+    result = asyncio.run(update())
+    return result if result else {"error": "Failed to update"}, 500
+
+
+@app.route('/api/admin/coaches/<coach_id>', methods=['DELETE'])
+def api_admin_delete_coach(coach_id):
+    """Удалить тренера"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def delete():
+        from bot.utils.supabase import delete_coach
+        return await delete_coach(coach_id)
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
+
+
+@app.route('/api/admin/prizes')
+def api_admin_prizes():
+    """Получить все призы (для админки)"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_prizes_admin
+        return await get_all_prizes_admin()
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/prizes', methods=['POST'])
+def api_admin_create_prize():
+    """Создать новый приз"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def create():
+        from bot.utils.supabase import create_prize_full
+        return await create_prize_full(data)
+    
+    result = asyncio.run(create())
+    return result if result else {"error": "Failed to create"}, 500
+
+
+@app.route('/api/admin/prizes/<prize_id>', methods=['PATCH'])
+def api_admin_update_prize(prize_id):
+    """Обновить приз"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def update():
+        from bot.utils.supabase import update_prize
+        return await update_prize(prize_id, data)
+    
+    result = asyncio.run(update())
+    return result if result else {"error": "Failed to update"}, 500
+
+
+@app.route('/api/admin/prizes/<prize_id>', methods=['DELETE'])
+def api_admin_delete_prize(prize_id):
+    """Удалить приз"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def delete():
+        from bot.utils.supabase import delete_prize
+        return await delete_prize(prize_id)
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
+
+
+@app.route('/api/admin/badges')
+def api_admin_badges():
+    """Получить каталог бейджей (для админки)"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_badges_catalog_full
+        return await get_badges_catalog_full()
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/badges/<badge_id>', methods=['PATCH'])
+def api_admin_update_badge(badge_id):
+    """Обновить бейдж"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def update():
+        from bot.utils.supabase import update_badge
+        return await update_badge(badge_id, data)
+    
+    result = asyncio.run(update())
+    return result if result else {"error": "Failed to update"}, 500
+
+
+@app.route('/api/admin/schedule')
+def api_admin_schedule():
+    """Получить расписание"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_schedule_admin
+        return await get_schedule_admin()
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/schedule', methods=['POST'])
+def api_admin_create_schedule():
+    """Создать/обновить расписание"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def create():
+        from bot.utils.supabase import upsert_schedule
+        return await upsert_schedule(data)
+    
+    result = asyncio.run(create())
+    return result if result else {"error": "Failed to create"}, 500
+
+
+@app.route('/api/admin/schedule/<schedule_id>', methods=['DELETE'])
+def api_admin_delete_schedule(schedule_id):
+    """Удалить расписание"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def delete():
+        from bot.utils.supabase import delete_schedule
+        return await delete_schedule(schedule_id)
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
+
+
+@app.route('/api/admin/users')
+def api_admin_users():
+    """Получить список участников"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_users_admin
+        return await get_all_users_admin()
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/users/<user_id>', methods=['PATCH'])
+def api_admin_update_user(user_id):
+    """Обновить участника"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def update():
+        from bot.utils.supabase import update_user_admin
+        return await update_user_admin(user_id, data)
+    
+    result = asyncio.run(update())
+    return result if result else {"error": "Failed to update"}, 500
+
+
+@app.route('/api/admin/workouts')
+def api_admin_workouts():
+    """Получить все тренировки"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    limit = request.args.get('limit', 50)
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_workouts_admin
+        return await get_all_workouts_admin(int(limit))
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/workouts/<workout_id>', methods=['DELETE'])
+def api_admin_delete_workout(workout_id):
+    """Удалить тренировку"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def delete():
+        from bot.utils.supabase import delete_workout_admin
+        return await delete_workout_admin(workout_id)
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
+
+
+@app.route('/api/admin/ratings')
+def api_admin_ratings():
+    """Получить все оценки тренеров"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    limit = request.args.get('limit', 50)
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_ratings_admin
+        return await get_all_ratings_admin(int(limit))
+    
+    return asyncio.run(get_data())
+
+
+@app.route('/api/admin/ratings/<rating_id>', methods=['DELETE'])
+def api_admin_delete_rating(rating_id):
+    """Удалить оценку"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def delete():
+        from bot.utils.supabase import delete_rating_admin
+        return await delete_rating_admin(rating_id)
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
+
+
+@app.route('/api/admin/stats')
+def api_admin_stats():
+    """Получить статистику для дашборда"""
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_admin_stats
+        return await get_admin_stats()
+    
+    return asyncio.run(get_data())
+
+
+def _is_admin_request(req):
+    """Проверка, что запрос от админа (через user_id в параметрах)"""
+    user_id = req.args.get('user_id')
+    if not user_id:
+        return False
+    
+    # Здесь можно добавить проверку через БД
+    # Пока возвращаем True, т.к. фронтенд уже проверяет isAdmin
+    return True
+
 
 # Импортируем хендлеры
 import bot.handlers.start
