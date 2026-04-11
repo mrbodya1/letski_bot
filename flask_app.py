@@ -110,6 +110,7 @@ def api_profile():
                 "max_sunday_streak": profile.get("max_sunday_streak", 0) or 0,
                 "total_sundays": profile.get("total_sundays", 0) or 0,
                 "total_km": profile.get("total_km", 0) or 0,
+                "role": profile.get("role", "user"),
                 "badges": badges or [],
                 "prizes": prizes or [],
                 "workouts": workouts or []
