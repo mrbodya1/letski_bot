@@ -318,20 +318,20 @@ def api_admin_badges():
     return asyncio.run(get_data())
 
 
-@app.route('/api/admin/badges/<badge_id>', methods=['PATCH'])
-def api_admin_update_badge(badge_id):
-    """Обновить бейдж"""
+@app.route('/api/admin/badges', methods=['POST'])
+def api_admin_create_badge():
+    """Создать новый бейдж"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
     data = request.get_json()
     
-    async def update():
-        from bot.utils.supabase import update_badge
-        return await update_badge(badge_id, data)
+    async def create():
+        from bot.utils.supabase import create_badge
+        return await create_badge(data)
     
-    result = asyncio.run(update())
-    return result if result else {"error": "Failed to update"}, 500
+    result = asyncio.run(create())
+    return result if result else {"error": "Failed to create"}, 500
 
 
 @app.route('/api/admin/schedule')
