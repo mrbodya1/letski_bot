@@ -620,3 +620,24 @@ async def get_admin_stats():
     except Exception as e:
         print(f"Error in get_admin_stats: {e}")
         return {"total_users": 0, "total_workouts": 0, "total_km": 0, "top_coaches": []}
+
+async def create_badge(data: dict):
+    """Создать новый бейдж в каталоге"""
+    required = ["badge_type", "name", "emoji", "trigger_type"]
+    for field in required:
+        if field not in data:
+            return None
+    
+    insert_data = {
+        "badge_type": data["badge_type"],
+        "name": data["name"],
+        "emoji": data["emoji"],
+        "trigger_type": data["trigger_type"],
+        "trigger_value": data.get("trigger_value"),
+        "description": data.get("description", ""),
+        "compliment": data.get("compliment", "Поздравляем!"),
+        "is_active": data.get("is_active", True)
+    }
+    
+    result = supabase.table("badges_catalog").insert(insert_data).execute()
+    return result.data[0] if result.data else None
