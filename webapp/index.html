@@ -666,6 +666,161 @@
             }
         }
 
+        /* Адаптивные таблицы для админки */
+        .admin-table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 16px;
+            border-radius: 18px;
+            background: white;
+        }
+        
+        .admin-table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+        
+        .admin-table th {
+            text-align: left;
+            padding: 12px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        
+        .admin-table td {
+            padding: 12px 8px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            white-space: nowrap;
+        }
+        
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Для узких экранов - уменьшаем отступы */
+        @media (max-width: 400px) {
+            .admin-table th,
+            .admin-table td {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+            
+            .admin-table {
+                min-width: 500px;
+            }
+        }
+        
+        /* Кнопки в таблице */
+        .admin-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+        
+        .admin-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            min-width: 32px;
+        }
+        
+        .admin-btn:hover {
+            opacity: 1;
+        }
+        
+        .admin-btn-danger {
+            color: #e74c3c;
+        }
+        
+        .admin-btn-success {
+            color: #00C853;
+        }
+        
+        /* Модальные окна - адаптив */
+        .admin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        
+        .admin-modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .admin-modal-content h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        
+        .admin-modal-content input,
+        .admin-modal-content select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+        
+        .admin-modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .admin-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        
+        .admin-modal-buttons button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             body {
                 padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
@@ -1254,8 +1409,9 @@
             }
             
             let html = `
-                <table class="admin-table">
-                    <tr><th>Дата</th><th>Тренер</th><th>Формат</th><th>Статус</th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Дата</th><th>Тренер</th><th>Формат</th><th>Статус</th></tr>
             `;
             
             schedule.forEach(s => {
@@ -1271,7 +1427,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
 
@@ -1282,13 +1438,13 @@
             }
             
             let html = `
-                <table class="admin-table">
-                    <tr><th>Дата</th><th>Участник</th><th>Км</th><th>Мин</th><th></th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Дата</th><th>Участник</th><th>Км</th><th>Мин</th><th></th></tr>
             `;
             
             workouts.forEach(w => {
                 const userName = w.profiles?.full_name || '—';
-                const coachName = w.coaches?.full_name || '—';
                 
                 html += `
                     <tr>
@@ -1303,7 +1459,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
 
@@ -1330,8 +1486,9 @@
             }
             
             let html = `
-                <table class="admin-table">
-                    <tr><th>Имя</th><th>Роль</th><th>Серия</th><th>Км</th><th></th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Имя</th><th>Роль</th><th>Серия</th><th>Км</th><th></th></tr>
             `;
             
             users.forEach(u => {
@@ -1348,7 +1505,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
 
@@ -1380,8 +1537,9 @@
             }
             
             let html = `
-                <table class="admin-table">
-                    <tr><th>Дата</th><th>Участник</th><th>Тренер</th><th>Оценка</th><th></th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Дата</th><th>Участник</th><th>Тренер</th><th>Оценка</th><th></th></tr>
             `;
             
             ratings.forEach(r => {
@@ -1402,7 +1560,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
 
@@ -1463,8 +1621,9 @@
                 <div style="margin-bottom: 16px;">
                     <button class="admin-form button" onclick="showAddPrizeForm()" style="width: auto; padding: 12px 20px;">+ Добавить приз</button>
                 </div>
-                <table class="admin-table">
-                    <tr><th>Название</th><th>Партнёр</th><th>Уровень</th><th></th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Название</th><th>Партнёр</th><th>Уровень</th><th></th></tr>
             `;
             
             prizes.forEach(p => {
@@ -1481,7 +1640,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
         
@@ -1495,8 +1654,9 @@
                 <div style="margin-bottom: 16px;">
                     <button class="admin-form button" onclick="showAddBadgeForm()" style="width: auto; padding: 12px 20px;">+ Добавить бейдж</button>
                 </div>
-                <table class="admin-table">
-                    <tr><th>Эмодзи</th><th>Название</th><th>Триггер</th><th>Активен</th><th></th></tr>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr><th>Эмодзи</th><th>Название</th><th>Триггер</th><th>Активен</th><th></th></tr>
             `;
             
             badges.forEach(b => {
@@ -1513,7 +1673,7 @@
                 `;
             });
             
-            html += '</table>';
+            html += '</table></div>';
             container.innerHTML = html;
         }
         
@@ -1611,18 +1771,17 @@
         
         // --- Призы ---
         window.showAddPrizeForm = () => {
-        // Создаём модальное окно с формой
             const formHtml = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="this.remove()">
-                    <div style="background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
-                        <h3 style="margin-bottom: 16px;">Добавить приз</h3>
+                <div class="admin-modal" onclick="this.remove()">
+                    <div class="admin-modal-content" onclick="event.stopPropagation()">
+                        <h3>Добавить приз</h3>
                         
-                        <input type="text" id="prize-name" placeholder="Название приза" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="text" id="prize-description" placeholder="Описание" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="text" id="prize-partner" placeholder="Партнёр" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="prize-name" placeholder="Название приза">
+                        <input type="text" id="prize-description" placeholder="Описание">
+                        <input type="text" id="prize-partner" placeholder="Партнёр">
                         
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Тип приза:</label>
-                        <select id="prize-type" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <label>Тип приза:</label>
+                        <select id="prize-type">
                             <option value="discount">Скидка</option>
                             <option value="gift">Подарок</option>
                             <option value="slot">Слот (место на забег/кэмп)</option>
@@ -1630,26 +1789,26 @@
                             <option value="service">Услуга</option>
                         </select>
                         
-                        <input type="text" id="prize-value" placeholder="Ценность (например, 20% или Бесплатно)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="prize-value" placeholder="Ценность (например, 20% или Бесплатно)">
                         
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Уровень редкости:</label>
-                        <select id="prize-level" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <label>Уровень редкости:</label>
+                        <select id="prize-level">
                             <option value="common">Обычный (4-9 тренировок)</option>
                             <option value="rare">Редкий (10-16 тренировок)</option>
                             <option value="epic">Эпический (17-23 тренировки)</option>
                             <option value="legendary">Легендарный (24-29 тренировок)</option>
                         </select>
                         
-                        <input type="url" id="prize-link" placeholder="Ссылка (https://...)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="number" id="prize-quantity" placeholder="Количество (пусто = безлимитно)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="url" id="prize-link" placeholder="Ссылка (https://...)">
+                        <input type="number" id="prize-quantity" placeholder="Количество (пусто = безлимитно)">
                         
-                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="prize-active" checked> Приз активен
                         </label>
                         
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="submitPrizeForm()" style="flex: 1; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 700;">Добавить</button>
-                            <button onclick="this.closest('div').parentElement.remove()" style="flex: 1; background: #f0f0f0; border: none; padding: 14px; border-radius: 40px;">Отмена</button>
+                        <div class="admin-modal-buttons">
+                            <button class="btn-primary" onclick="submitPrizeForm()">Добавить</button>
+                            <button class="btn-secondary" onclick="this.closest('.admin-modal').remove()">Отмена</button>
                         </div>
                     </div>
                 </div>
@@ -1690,7 +1849,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.id) {
-                    document.querySelector('div[style*="position: fixed"]').remove();
+                    document.querySelector('.admin-modal').remove();
                     alert('Приз добавлен!');
                     showAdminSection('prizes');
                 } else {
@@ -1746,27 +1905,27 @@
         // --- Бейджи ---
         window.showAddBadgeForm = () => {
             const formHtml = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="this.remove()">
-                    <div style="background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 90%;" onclick="event.stopPropagation()">
-                        <h3 style="margin-bottom: 16px;">Добавить бейдж</h3>
+                <div class="admin-modal" onclick="this.remove()">
+                    <div class="admin-modal-content" onclick="event.stopPropagation()">
+                        <h3>Добавить бейдж</h3>
                         
-                        <input type="text" id="badge-type" placeholder="Уникальный ID (например, streak_16)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="text" id="badge-name" placeholder="Название бейджа" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="text" id="badge-emoji" placeholder="Эмодзи (например, 🔥)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="text" id="badge-description" placeholder="Описание" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
-                        <input type="text" id="badge-compliment" placeholder="Комплимент при получении" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="badge-type" placeholder="Уникальный ID (например, streak_16)">
+                        <input type="text" id="badge-name" placeholder="Название бейджа">
+                        <input type="text" id="badge-emoji" placeholder="Эмодзи (например, 🔥)">
+                        <input type="text" id="badge-description" placeholder="Описание">
+                        <input type="text" id="badge-compliment" placeholder="Комплимент при получении">
                         
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Тип триггера:</label>
-                        <select id="badge-trigger" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <label>Тип триггера:</label>
+                        <select id="badge-trigger">
                             <option value="first_workout">Первая тренировка</option>
                             <option value="streak">Серия воскресений</option>
                             <option value="total_km">Суммарный километраж</option>
                             <option value="total_workouts">Количество тренировок</option>
                         </select>
                         
-                        <input type="number" id="badge-trigger-value" placeholder="Значение триггера (например, 4)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="number" id="badge-trigger-value" placeholder="Значение триггера (например, 4)">
                         
-                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="badge-active" checked> Бейдж активен
                         </label>
                         
@@ -1774,9 +1933,9 @@
                             ⚠️ Новые типы триггеров нужно добавлять в код функции check_and_award_badges
                         </p>
                         
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="submitBadgeForm()" style="flex: 1; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 700;">Добавить</button>
-                            <button onclick="this.closest('div').parentElement.remove()" style="flex: 1; background: #f0f0f0; border: none; padding: 14px; border-radius: 40px;">Отмена</button>
+                        <div class="admin-modal-buttons">
+                            <button class="btn-primary" onclick="submitBadgeForm()">Добавить</button>
+                            <button class="btn-secondary" onclick="this.closest('.admin-modal').remove()">Отмена</button>
                         </div>
                     </div>
                 </div>
@@ -1817,7 +1976,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.id) {
-                    document.querySelector('div[style*="position: fixed"]').remove();
+                    document.querySelector('.admin-modal').remove();
                     alert('Бейдж добавлен!');
                     showAdminSection('badges');
                 } else {
