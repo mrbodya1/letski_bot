@@ -1231,6 +1231,14 @@
                     renderBadgesTable(container, data);
                 } else if (section === 'stats') {
                     renderStats(container, data);
+                } else if (section === 'users') {
+                    renderUsersTable(container, data);
+                } else if (section === 'workouts') {
+                    renderWorkoutsTable(container, data);
+                } else if (section === 'ratings') {
+                    renderRatingsTable(container, data);
+                } else if (section === 'schedule') {
+                    renderScheduleTable(container, data);
                 } else {
                     container.innerHTML = `<div class="empty-state">Раздел в разработке</div>`;
                 }
@@ -1238,6 +1246,181 @@
                 container.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
+
+        function renderScheduleTable(container, schedule) {
+            if (!schedule || schedule.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет расписания</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="admin-table">
+                    <tr><th>Дата</th><th>Тренер</th><th>Формат</th><th>Статус</th></tr>
+            `;
+            
+            schedule.forEach(s => {
+                const coachName = s.coaches?.full_name || '—';
+                
+                html += `
+                    <tr>
+                        <td>${s.sunday_date}</td>
+                        <td>${coachName}</td>
+                        <td>${s.format || '—'}</td>
+                        <td>${s.status || 'scheduled'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function renderWorkoutsTable(container, workouts) {
+            if (!workouts || workouts.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет тренировок</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="admin-table">
+                    <tr><th>Дата</th><th>Участник</th><th>Км</th><th>Мин</th><th></th></tr>
+            `;
+            
+            workouts.forEach(w => {
+                const userName = w.profiles?.full_name || '—';
+                const coachName = w.coaches?.full_name || '—';
+                
+                html += `
+                    <tr>
+                        <td>${w.sunday_date}</td>
+                        <td>${userName}</td>
+                        <td>${w.distance_km}</td>
+                        <td>${w.duration_min}</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn admin-btn-danger" onclick="deleteWorkout('${w.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        window.deleteWorkout = (id) => {
+            if (!confirm('Удалить тренировку? Статистика участника будет уменьшена.')) return;
+            
+            fetch(`${API_BASE}/api/admin/workouts/${id}?user_id=${userId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Тренировка удалена!');
+                    showAdminSection('workouts');
+                } else {
+                    alert('Ошибка удаления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+
+        function renderUsersTable(container, users) {
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет участников</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="admin-table">
+                    <tr><th>Имя</th><th>Роль</th><th>Серия</th><th>Км</th><th></th></tr>
+            `;
+            
+            users.forEach(u => {
+                html += `
+                    <tr>
+                        <td>${u.full_name || '—'}</td>
+                        <td>${u.role || 'user'}</td>
+                        <td>${u.sunday_streak || 0}</td>
+                        <td>${u.total_km || 0}</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn" onclick="editUser('${u.id}')">✏️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        window.editUser = (id) => {
+            const role = prompt('Роль (user/admin):');
+            if (!role) return;
+            
+            fetch(`${API_BASE}/api/admin/users/${id}?user_id=${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: role })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Участник обновлён!');
+                    showAdminSection('users');
+                } else {
+                    alert('Ошибка обновления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+
+        function renderRatingsTable(container, ratings) {
+            if (!ratings || ratings.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет оценок</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="admin-table">
+                    <tr><th>Дата</th><th>Участник</th><th>Тренер</th><th>Оценка</th><th></th></tr>
+            `;
+            
+            ratings.forEach(r => {
+                const userName = r.profiles?.full_name || '—';
+                const coachName = r.coaches?.full_name || '—';
+                const avgRating = ((r.rating_pro + r.rating_presentation + r.rating_friendly) / 3).toFixed(1);
+                
+                html += `
+                    <tr>
+                        <td>${new Date(r.created_at).toLocaleDateString('ru-RU')}</td>
+                        <td>${userName}</td>
+                        <td>${coachName}</td>
+                        <td>⭐ ${avgRating}</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn admin-btn-danger" onclick="deleteRating('${r.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        window.deleteRating = (id) => {
+            if (!confirm('Удалить оценку?')) return;
+            
+            fetch(`${API_BASE}/api/admin/ratings/${id}?user_id=${userId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Оценка удалена!');
+                    showAdminSection('ratings');
+                } else {
+                    alert('Ошибка удаления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
         
         function renderCoachesTable(container, coaches) {
             if (!coaches || coaches.length === 0) {
@@ -1513,18 +1696,50 @@
         
         // --- Бейджи ---
         window.showAddBadgeForm = () => {
+            const badgeType = prompt('Уникальный ID бейджа (например, "streak_16"):');
+            if (!badgeType) return;
+            
             const name = prompt('Название бейджа:');
             if (!name) return;
             
             const emoji = prompt('Эмодзи:') || '🏅';
             const description = prompt('Описание:') || '';
             const compliment = prompt('Комплимент при получении:') || 'Поздравляем!';
-            const triggerType = prompt('Тип триггера (first_workout, streak, total_km, total_workouts):') || 'streak';
-            const triggerValue = prompt('Значение триггера (например, 4):') || null;
+            const triggerType = prompt('Тип триггера (first_workout, streak, total_km, total_workouts):');
+            if (!triggerType) return;
+            
+            const triggerValue = prompt('Значение триггера (например, 4) или пусто:');
             const isActive = confirm('Бейдж активен? (OK - да, Отмена - нет)');
             
-            // Временно через alert, т.к. эндпоинт POST для бейджей ещё не готов
-            alert('Функция в разработке. Пока добавьте бейдж через SQL.');
+            const data = {
+                badge_type: badgeType,
+                name: name,
+                emoji: emoji,
+                description: description,
+                compliment: compliment,
+                trigger_type: triggerType,
+                is_active: isActive
+            };
+            
+            if (triggerValue) {
+                data.trigger_value = parseInt(triggerValue);
+            }
+            
+            fetch(`${API_BASE}/api/admin/badges?user_id=${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Бейдж добавлен!');
+                    showAdminSection('badges');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
         };
         
         window.editBadge = (id) => {
