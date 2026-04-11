@@ -1611,24 +1611,72 @@
         
         // --- Призы ---
         window.showAddPrizeForm = () => {
-            const name = prompt('Название приза:');
-            if (!name) return;
+        // Создаём модальное окно с формой
+            const formHtml = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="this.remove()">
+                    <div style="background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                        <h3 style="margin-bottom: 16px;">Добавить приз</h3>
+                        
+                        <input type="text" id="prize-name" placeholder="Название приза" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="prize-description" placeholder="Описание" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="prize-partner" placeholder="Партнёр" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Тип приза:</label>
+                        <select id="prize-type" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                            <option value="discount">Скидка</option>
+                            <option value="gift">Подарок</option>
+                            <option value="slot">Слот (место на забег/кэмп)</option>
+                            <option value="merch">Мерч</option>
+                            <option value="service">Услуга</option>
+                        </select>
+                        
+                        <input type="text" id="prize-value" placeholder="Ценность (например, 20% или Бесплатно)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Уровень редкости:</label>
+                        <select id="prize-level" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                            <option value="common">Обычный (4-9 тренировок)</option>
+                            <option value="rare">Редкий (10-16 тренировок)</option>
+                            <option value="epic">Эпический (17-23 тренировки)</option>
+                            <option value="legendary">Легендарный (24-29 тренировок)</option>
+                        </select>
+                        
+                        <input type="url" id="prize-link" placeholder="Ссылка (https://...)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="number" id="prize-quantity" placeholder="Количество (пусто = безлимитно)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        
+                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                            <input type="checkbox" id="prize-active" checked> Приз активен
+                        </label>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="submitPrizeForm()" style="flex: 1; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 700;">Добавить</button>
+                            <button onclick="this.closest('div').parentElement.remove()" style="flex: 1; background: #f0f0f0; border: none; padding: 14px; border-radius: 40px;">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            const description = prompt('Описание:') || '';
-            const partner = prompt('Партнёр:') || '';
-            const type = prompt('Тип (discount, gift, slot, merch, service):') || 'gift';
-            const value = prompt('Ценность (например, "20%" или "Бесплатно"):') || '';
-            const level = prompt('Уровень (common, rare, epic, legendary):') || 'common';
-            const link = prompt('Ссылка (опционально):') || null;
-            const quantity = prompt('Количество (пусто = безлимитно):');
-            const isActive = confirm('Приз активен? (OK - да, Отмена - нет)');
+            document.body.insertAdjacentHTML('beforeend', formHtml);
+        };
+        
+        window.submitPrizeForm = () => {
+            const name = document.getElementById('prize-name')?.value;
+            if (!name) {
+                alert('Название обязательно!');
+                return;
+            }
             
-            const data = { 
-                name, description, partner, type, value, level, 
-                link_url: link, 
-                is_active: isActive 
+            const data = {
+                name: name,
+                description: document.getElementById('prize-description')?.value || '',
+                partner: document.getElementById('prize-partner')?.value || '',
+                type: document.getElementById('prize-type')?.value || 'gift',
+                value: document.getElementById('prize-value')?.value || '',
+                level: document.getElementById('prize-level')?.value || 'common',
+                link_url: document.getElementById('prize-link')?.value || null,
+                is_active: document.getElementById('prize-active')?.checked || false
             };
             
+            const quantity = document.getElementById('prize-quantity')?.value;
             if (quantity) {
                 data.total_quantity = parseInt(quantity);
                 data.remaining_quantity = parseInt(quantity);
@@ -1642,6 +1690,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.id) {
+                    document.querySelector('div[style*="position: fixed"]').remove();
                     alert('Приз добавлен!');
                     showAdminSection('prizes');
                 } else {
@@ -1696,31 +1745,66 @@
         
         // --- Бейджи ---
         window.showAddBadgeForm = () => {
-            const badgeType = prompt('Уникальный ID бейджа (например, "streak_16"):');
-            if (!badgeType) return;
+            const formHtml = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="this.remove()">
+                    <div style="background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 90%;" onclick="event.stopPropagation()">
+                        <h3 style="margin-bottom: 16px;">Добавить бейдж</h3>
+                        
+                        <input type="text" id="badge-type" placeholder="Уникальный ID (например, streak_16)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="badge-name" placeholder="Название бейджа" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="badge-emoji" placeholder="Эмодзи (например, 🔥)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="badge-description" placeholder="Описание" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        <input type="text" id="badge-compliment" placeholder="Комплимент при получении" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Тип триггера:</label>
+                        <select id="badge-trigger" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                            <option value="first_workout">Первая тренировка</option>
+                            <option value="streak">Серия воскресений</option>
+                            <option value="total_km">Суммарный километраж</option>
+                            <option value="total_workouts">Количество тренировок</option>
+                        </select>
+                        
+                        <input type="number" id="badge-trigger-value" placeholder="Значение триггера (например, 4)" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 12px;">
+                        
+                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                            <input type="checkbox" id="badge-active" checked> Бейдж активен
+                        </label>
+                        
+                        <p style="font-size: 12px; color: #666; margin-bottom: 16px;">
+                            ⚠️ Новые типы триггеров нужно добавлять в код функции check_and_award_badges
+                        </p>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="submitBadgeForm()" style="flex: 1; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px; border-radius: 40px; font-weight: 700;">Добавить</button>
+                            <button onclick="this.closest('div').parentElement.remove()" style="flex: 1; background: #f0f0f0; border: none; padding: 14px; border-radius: 40px;">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            const name = prompt('Название бейджа:');
-            if (!name) return;
+            document.body.insertAdjacentHTML('beforeend', formHtml);
+        };
+        
+        window.submitBadgeForm = () => {
+            const badgeType = document.getElementById('badge-type')?.value;
+            const name = document.getElementById('badge-name')?.value;
             
-            const emoji = prompt('Эмодзи:') || '🏅';
-            const description = prompt('Описание:') || '';
-            const compliment = prompt('Комплимент при получении:') || 'Поздравляем!';
-            const triggerType = prompt('Тип триггера (first_workout, streak, total_km, total_workouts):');
-            if (!triggerType) return;
-            
-            const triggerValue = prompt('Значение триггера (например, 4) или пусто:');
-            const isActive = confirm('Бейдж активен? (OK - да, Отмена - нет)');
+            if (!badgeType || !name) {
+                alert('ID и название обязательны!');
+                return;
+            }
             
             const data = {
                 badge_type: badgeType,
                 name: name,
-                emoji: emoji,
-                description: description,
-                compliment: compliment,
-                trigger_type: triggerType,
-                is_active: isActive
+                emoji: document.getElementById('badge-emoji')?.value || '🏅',
+                description: document.getElementById('badge-description')?.value || '',
+                compliment: document.getElementById('badge-compliment')?.value || 'Поздравляем!',
+                trigger_type: document.getElementById('badge-trigger')?.value,
+                is_active: document.getElementById('badge-active')?.checked || false
             };
             
+            const triggerValue = document.getElementById('badge-trigger-value')?.value;
             if (triggerValue) {
                 data.trigger_value = parseInt(triggerValue);
             }
@@ -1733,6 +1817,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.id) {
+                    document.querySelector('div[style*="position: fixed"]').remove();
                     alert('Бейдж добавлен!');
                     showAdminSection('badges');
                 } else {
