@@ -173,8 +173,10 @@ async def handle_workout_photo(message: types.Message):
     for badge in awarded_badges:
         response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n{badge['emoji']} {badge['name']}\n"
     
-    # ========== ВЫДАЧА ПРИЗОВ (только личные уведомления) ==========
+    # ========== ВЫДАЧА ПРИЗОВ (сохраняем в БД, но не показываем в личке) ==========
     all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
+    prize_was_awarded = False
+    
     if all_prizes.data:
         available_prizes = []
         for prize in all_prizes.data:
@@ -204,16 +206,11 @@ async def handle_workout_photo(message: types.Message):
             )
             
             if result:
-                promo_code = result["promo_code"]
-                valid_days = selected_prize.get("valid_days", 14)
-                
+                prize_was_awarded = True
+                # Не показываем приз в личке — только сообщение, что нужно зайти в кабинет
                 response_text += (
-                    f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n"
-                    f"🏆 {selected_prize['name']}\n"
-                    f"🏢 {selected_prize.get('partner', 'LETSKI')}\n"
-                    f"💎 {selected_prize.get('value', '')}\n"
-                    f"🎫 Промокод: <code>{promo_code}</code>\n"
-                    f"⏰ Срок действия: {valid_days} дней\n"
+                    f"\n🎁 <b>Ты получил новый приз!</b>\n"
+                    f"Загляни в личный кабинет, чтобы открыть его 🎰\n"
                 )
     
     await message.reply(response_text, parse_mode="HTML")
@@ -235,6 +232,7 @@ async def cmd_check_sunday(message: types.Message):
 
 @dp.message_handler(Command("clear_cache"))
 async def cmd_clear_cache(message: types.Message):
+    """Очистить кэш обработанных сообщений (для админа)"""
     if not is_admin(message.from_user.id):
         await message.answer("❌ Нет доступа")
         return
