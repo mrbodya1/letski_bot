@@ -1,6 +1,4 @@
-from aiogram import types, Bot
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram import types
 
 from flask_app import dp, telegram_bot
 from config import ADMIN_IDS
@@ -11,7 +9,6 @@ from bot.utils.supabase import (
 from bot.keyboards.inline import get_rating_stars, get_rating_keyboard
 
 
-# Временное хранилище оценок
 temp_ratings = {}
 
 
@@ -37,7 +34,7 @@ async def start_rating(callback: types.CallbackQuery):
         "🌟 <b>Оценка тренера</b>\n\n"
         "<b>1. Профессионализм</b>\n"
         "Насколько грамотно тренер провел тренировку?",
-        reply_markup=get_rating_stars("pro", workout_id, 0),
+        reply_markup=get_rating_stars("pro", workout_id, 0, None),
         parse_mode="HTML"
     )
     await callback.answer()
@@ -58,7 +55,7 @@ async def rate_pro(callback: types.CallbackQuery):
         "🌟 <b>Оценка тренера</b>\n\n"
         "<b>2. Подача материала</b>\n"
         "Насколько понятно и интересно тренер объяснял?",
-        reply_markup=get_rating_stars("presentation", workout_id, 0),
+        reply_markup=get_rating_stars("presentation", workout_id, 0, "pro"),
         parse_mode="HTML"
     )
     await callback.answer()
@@ -79,7 +76,7 @@ async def rate_presentation(callback: types.CallbackQuery):
         "🌟 <b>Оценка тренера</b>\n\n"
         "<b>3. Дружелюбность</b>\n"
         "Насколько комфортно и приятно было заниматься?",
-        reply_markup=get_rating_stars("friendly", workout_id, 0),
+        reply_markup=get_rating_stars("friendly", workout_id, 0, "presentation"),
         parse_mode="HTML"
     )
     await callback.answer()
@@ -103,7 +100,42 @@ async def rate_friendly(callback: types.CallbackQuery):
         f"Подача: {'★' * ratings['presentation']}{'☆' * (5 - ratings['presentation'])}\n"
         f"Дружелюбность: {'★' * ratings['friendly']}{'☆' * (5 - ratings['friendly'])}\n\n"
         f"Всё верно?",
-        reply_markup=get_rating_stars("confirm", workout_id, 5),
+        reply_markup=get_rating_stars("confirm", workout_id, 5, "friendly"),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith("rate_back:"))
+async def rate_back(callback: types.CallbackQuery):
+    """Возврат к предыдущему шагу оценки"""
+    _, workout_id, target_category = callback.data.split(":")
+    user_id = callback.from_user.id
+    
+    if user_id not in temp_ratings:
+        await callback.answer("Сессия истекла, начни заново", show_alert=True)
+        return
+    
+    ratings = temp_ratings[user_id]
+    
+    if target_category == "pro":
+        current_value = ratings.get("pro", 0)
+        previous = None
+        text = "🌟 <b>Оценка тренера</b>\n\n<b>1. Профессионализм</b>\nНасколько грамотно тренер провел тренировку?"
+    elif target_category == "presentation":
+        current_value = ratings.get("presentation", 0)
+        previous = "pro"
+        text = "🌟 <b>Оценка тренера</b>\n\n<b>2. Подача материала</b>\nНасколько понятно и интересно тренер объяснял?"
+    elif target_category == "friendly":
+        current_value = ratings.get("friendly", 0)
+        previous = "presentation"
+        text = "🌟 <b>Оценка тренера</b>\n\n<b>3. Дружелюбность</b>\nНасколько комфортно и приятно было заниматься?"
+    else:
+        return
+    
+    await callback.message.edit_text(
+        text,
+        reply_markup=get_rating_stars(target_category, workout_id, current_value, previous),
         parse_mode="HTML"
     )
     await callback.answer()
@@ -145,7 +177,7 @@ async def confirm_rating(callback: types.CallbackQuery):
         
         for admin_id in ADMIN_IDS:
             try:
-                await bot.send_message(
+                await telegram_bot.send_message(
                     admin_id,
                     f"⭐️ <b>Новая оценка тренеру!</b>\n\n"
                     f"👤 Участник: {profile['full_name']}\n"
