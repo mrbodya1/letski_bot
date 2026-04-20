@@ -1,4 +1,5 @@
 import re
+import random
 from datetime import date
 from aiogram import types
 from aiogram.dispatcher.filters import Command
@@ -9,7 +10,8 @@ from bot.utils.supabase import (
     get_profile, get_sunday_schedule, create_workout,
     update_workout_repost, get_all_coaches,
     create_sunday_schedule as create_schedule,
-    supabase, check_and_award_badges, check_and_award_prize
+    supabase, check_and_award_badges,
+    award_prize_with_promo, get_issued_prizes_count_for_workout
 )
 from bot.keyboards.inline import get_rating_keyboard
 from bot.utils.helpers import calculate_pace, format_pace
@@ -195,28 +197,75 @@ async def handle_workout_photo(message: types.Message):
         except Exception as e:
             print(f"❌ Ошибка отправки уведомления о бейдже: {e}")
     
-    # ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА ПРИЗОВ ==========
-    prize, level_name = await check_and_award_prize(profile["id"], total_sundays)
-    
-    if prize:
-        # В личку
-        response_text += f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n{prize['name']} ({level_name} уровень)\n"
+    # ========== НОВАЯ МЕХАНИКА ВЫДАЧИ ПРИЗОВ ==========
+    # 1. Получаем все активные призы
+    all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
+    if all_prizes.data:
+        # 2. Фильтруем призы, доступные пользователю по количеству тренировок
+        available_prizes = []
+        for prize in all_prizes.data:
+            trigger_workouts = prize.get("trigger_workouts", 0) or 0
+            
+            # Проверяем, достаточно ли у пользователя тренировок
+            if total_sundays >= trigger_workouts:
+                # Проверяем квоту на эту тренировку
+                quota = prize.get("quota_per_workout", 0) or 0
+                
+                if quota == 0:
+                    # Безлимитный приз — добавляем в пул
+                    available_prizes.append(prize)
+                else:
+                    # Проверяем, сколько раз уже выдан этот приз сегодня
+                    issued_count = await get_issued_prizes_count_for_workout(prize["id"], today)
+                    
+                    if issued_count < quota:
+                        # Добавляем в пул столько раз, сколько осталось до квоты
+                        remaining = quota - issued_count
+                        for _ in range(remaining * 2):
+                            available_prizes.append(prize)
         
-        # В общий чат
-        try:
-            await telegram_bot.send_message(
-                chat_id=MAIN_CHAT_ID,
-                text=(
-                    f"🎁 <b>ВЫДАН ПРИЗ!</b>\n\n"
-                    f"👤 {profile['full_name']}\n"
-                    f"🏆 {prize['name']}\n"
-                    f"🏢 {prize.get('partner', 'Letski School')}\n"
-                    f"📊 Уровень: {level_name} ({total_sundays} тренировок)"
-                ),
-                parse_mode="HTML"
+        # 3. Выбираем случайный приз
+        if available_prizes:
+            selected_prize = random.choice(available_prizes)
+            
+            # 4. Выдаём приз с промокодом
+            result = await award_prize_with_promo(
+                user_id=profile["id"],
+                prize_id=selected_prize["id"],
+                awarded_for=f"workout_{today}",
+                valid_days=selected_prize.get("valid_days", 14)
             )
-        except Exception as e:
-            print(f"⚠️ Не удалось отправить уведомление о призе в чат: {e}")
+            
+            if result:
+                promo_code = result["promo_code"]
+                valid_days = selected_prize.get("valid_days", 14)
+                
+                # Уведомление в личку
+                response_text += (
+                    f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n"
+                    f"🏆 {selected_prize['name']}\n"
+                    f"🏢 {selected_prize.get('partner', 'LETSKI')}\n"
+                    f"💎 {selected_prize.get('value', '')}\n"
+                    f"🎫 Промокод: <code>{promo_code}</code>\n"
+                    f"⏰ Срок действия: {valid_days} дней\n"
+                )
+                
+                # Уведомление в общий чат
+                try:
+                    await telegram_bot.send_message(
+                        chat_id=MAIN_CHAT_ID,
+                        text=(
+                            f"🎁 <b>ВЫДАН ПРИЗ!</b>\n\n"
+                            f"👤 {profile['full_name']}\n"
+                            f"🏆 {selected_prize['name']}\n"
+                            f"🏢 {selected_prize.get('partner', 'LETSKI')}\n"
+                            f"💎 {selected_prize.get('value', '')}\n"
+                            f"📊 Тренировка: {total_sundays}"
+                        ),
+                        parse_mode="HTML"
+                    )
+                except Exception as e:
+                    print(f"⚠️ Не удалось отправить уведомление о призе в чат: {e}")
     
     await message.reply(response_text, parse_mode="HTML")
     
@@ -244,6 +293,7 @@ async def cmd_clear_cache(message: types.Message):
     
     processed_messages.clear()
     await message.answer("✅ Кэш очищен")
+
 
 @dp.message_handler(Command("file_id"))
 async def cmd_get_file_id(message: types.Message):
