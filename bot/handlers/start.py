@@ -85,9 +85,13 @@ async def process_gender(message: types.Message, state: FSMContext):
             f"✅ Регистрация завершена!\n\n"
             f"👤 {data['full_name']}\n"
             f"⚥ {gender_text}\n\n"
-            f"Теперь ты участник Letski Клуба! 🎉\n"
-            f"Жду твой первый отчет в воскресенье.",
-            reply_markup=get_main_menu_keyboard()
+            f"Теперь ты — часть проекта «Длительная» от команды LETSKI.\n"
+            f"Рады видеть в наших воскресных рядах!\n\n"
+            f"🏃 Жду твой первый отчёт в это воскресенье.\n"
+            f"Всю статистику, правила и полученные призы ты найдёшь в своём личном кабинете (кнопка в меню).\n\n"
+            f"💬 Общий чат участников: t.me/letski_ekb",
+            reply_markup=get_main_menu_keyboard(),
+            parse_mode="HTML"
         )
     else:
         await message.answer("❌ Произошла ошибка при регистрации. Попробуй позже.")
@@ -97,17 +101,21 @@ async def process_gender(message: types.Message, state: FSMContext):
 
 @dp.message_handler(Command("help"))
 async def cmd_help(message: types.Message):
+    # Сначала отправляем текст
     await message.answer(
-        "📋 <b>ПОМОЩЬ</b>\n\n"
-        "<b>Как отправить тренировку:</b>\n"
-        "1️⃣ Сделай фото с тренировки\n"
-        "2️⃣ В подписи укажи:\n"
-        "<code>#kmX #minX</code>\n"
-        "3️⃣ Отправь в воскресенье\n\n"
-        "<b>Пример:</b>\n"
-        "<code>#km10 #min45</code>\n\n"
-        "❓ Вопросы? Пиши @Stroitelev_Fedor",
+        "📸 <b>Пример оформления отчёта:</b>\n\n"
+        "1️⃣ Открой свой трекер (Strava, Garmin, Nike Run Club и т.д.)\n"
+        "2️⃣ Сделай скриншот с дистанцией и временем\n"
+        "3️⃣ В подписи к фото укажи: <code>#kmX #minX</code>\n\n"
+        "Вот так выглядит правильный отчёт 👇",
         parse_mode="HTML"
+    )
+    
+    # Затем отправляем фото-пример
+    # Нужно будет заменить FILE_ID на реальный после загрузки фото в бота
+    await message.answer_photo(
+        photo="FILE_ID_ПРИМЕРА",
+        caption="#km20 #min132"
     )
 
 
