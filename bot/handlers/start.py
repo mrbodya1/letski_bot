@@ -6,7 +6,6 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from flask_app import dp
 from bot.utils.supabase import get_profile, create_profile
 from bot.keyboards.reply import get_gender_keyboard, get_main_menu_keyboard
-from config import WEBHOOK_HOST
 
 
 class RegistrationState(StatesGroup):
@@ -14,6 +13,7 @@ class RegistrationState(StatesGroup):
     waiting_for_gender = State()
 
 
+# ========== КОМАНДА /start ==========
 @dp.message_handler(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
@@ -33,19 +33,15 @@ async def cmd_start(message: types.Message, state: FSMContext):
         )
     else:
         await message.answer(
-            "Привет! Добро пожаловать в «Длительную» от школы спорта LETSKI\n\n"
-            "Это бесплатные воскресные тренировки в 09:00 в парке Маяковского, где мы:\n"
-            "— бегаем вместе\n"
-            "— знакомимся и общаемся\n"
-            "— становимся сильнее от недели к неделе\n\n"
-            "Скоро здесь появятся твои тренировки, серии и достижения, а еще мы будем раздавать подарки! 🙂\n\n"
-            "Но сначала давай познакомимся.\n\n"
-            "Как тебя зовут?\n\n"
-            "Напиши Имя и Фамилию👇"
+            "👋 Привет! Добро пожаловать в проект «Длительная» от команды LETSKI!\n\n"
+            "Мы бегаем каждое воскресенье в 9:00 с профессиональными тренерами.\n\n"
+            "Давай познакомимся. Как тебя зовут?\n"
+            "Напиши Имя и Фамилию:"
         )
         await RegistrationState.waiting_for_full_name.set()
 
 
+# ========== РЕГИСТРАЦИЯ: ИМЯ ==========
 @dp.message_handler(state=RegistrationState.waiting_for_full_name)
 async def process_full_name(message: types.Message, state: FSMContext):
     full_name = message.text.strip()
@@ -62,6 +58,7 @@ async def process_full_name(message: types.Message, state: FSMContext):
     await RegistrationState.waiting_for_gender.set()
 
 
+# ========== РЕГИСТРАЦИЯ: ПОЛ ==========
 @dp.message_handler(state=RegistrationState.waiting_for_gender)
 async def process_gender(message: types.Message, state: FSMContext):
     gender_text = message.text.strip()
@@ -99,6 +96,7 @@ async def process_gender(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+# ========== КОМАНДА /help ==========
 @dp.message_handler(Command("help"))
 async def cmd_help(message: types.Message):
     await message.answer(
@@ -116,6 +114,13 @@ async def cmd_help(message: types.Message):
     )
 
 
+# ========== КНОПКА "ℹ️ Помощь" ==========
+@dp.message_handler(lambda message: message.text == "ℹ️ Помощь")
+async def button_help(message: types.Message):
+    await cmd_help(message)
+
+
+# ========== КОМАНДА /profile ==========
 @dp.message_handler(Command("profile"))
 async def cmd_profile(message: types.Message):
     user_id = message.from_user.id
@@ -137,12 +142,16 @@ async def cmd_profile(message: types.Message):
     )
 
 
-# ========== ОБРАБОТЧИКИ КНОПОК МЕНЮ ==========
+# ========== КНОПКА "📊 Мой профиль" ==========
 @dp.message_handler(lambda message: message.text == "📊 Мой профиль")
 async def button_profile(message: types.Message):
     await cmd_profile(message)
 
 
-@dp.message_handler(lambda message: message.text == "ℹ️ Помощь")
-async def button_help(message: types.Message):
-    await cmd_help(message)
+# ========== КНОПКА "📱 Открыть приложение" (оставлена для совместимости) ==========
+@dp.message_handler(lambda message: message.text == "📱 Открыть приложение")
+async def button_app(message: types.Message):
+    await message.answer(
+        "📱 Нажми кнопку «Открыть Letski» в меню бота (рядом с полем ввода).\n\n"
+        "Если кнопки нет — напиши /start для обновления меню."
+    )
