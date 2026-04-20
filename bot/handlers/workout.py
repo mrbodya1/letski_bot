@@ -118,15 +118,13 @@ async def handle_workout_photo(message: types.Message):
     total_km = updated_profile.get("total_km", 0) or 0
     total_sundays = updated_profile.get("total_sundays", 0) or 0
     
-    # Публикуем в общий чат
+    # Публикуем в общий чат (только факт тренировки)
     coach_name = schedule.get("coaches", {}).get("full_name", "Неизвестный тренер")
     pace = calculate_pace(parsed["km"], parsed["min"])
     
-    # Определяем тип тренировки (тестовая или обычная)
     is_test = is_admin(user_id)
     test_prefix = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n" if is_test else ""
 
-    # Публикуем в общий чат
     try:
         group_message = await telegram_bot.send_photo(
             chat_id=MAIN_CHAT_ID,
@@ -148,7 +146,7 @@ async def handle_workout_photo(message: types.Message):
     except Exception as e:
         print(f"⚠️ Не удалось отправить в общий чат: {e}")
     
-    # Ответ пользователю
+    # Ответ пользователю (в личку)
     if is_test:
         title = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>"
     else:
@@ -163,7 +161,7 @@ async def handle_workout_photo(message: types.Message):
         f"📏 Всего км: {total_km}\n"
     )
     
-    # ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА БЕЙДЖЕЙ ==========
+    # ========== ПРОВЕРКА БЕЙДЖЕЙ (только личные уведомления) ==========
     stats = {
         'total_workouts': total_sundays,
         'total_km': total_km,
@@ -171,64 +169,33 @@ async def handle_workout_photo(message: types.Message):
     }
     
     awarded_badges = await check_and_award_badges(profile["id"], stats)
-    print(f"🏅 check_and_award_badges вернула: {awarded_badges}")
     
     for badge in awarded_badges:
-        print(f"📢 Отправляю уведомление о бейдже: {badge['name']}")
-        
-        # В личку
         response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n{badge['emoji']} {badge['name']}\n"
-        
-        # В общий чат
-        compliment = badge.get('compliment', 'Поздравляем!')
-        try:
-            await telegram_bot.send_message(
-                chat_id=MAIN_CHAT_ID,
-                text=(
-                    f"🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n\n"
-                    f"👤 {profile['full_name']}\n"
-                    f"{badge['emoji']} <b>{badge['name']}</b>\n"
-                    f"📋 {badge.get('description', '')}\n\n"
-                    f"💬 {compliment}"
-                ),
-                parse_mode="HTML"
-            )
-            print(f"✅ Уведомление о бейдже {badge['name']} отправлено")
-        except Exception as e:
-            print(f"❌ Ошибка отправки уведомления о бейдже: {e}")
     
-    # ========== НОВАЯ МЕХАНИКА ВЫДАЧИ ПРИЗОВ ==========
-    # 1. Получаем все активные призы
+    # ========== ВЫДАЧА ПРИЗОВ (только личные уведомления) ==========
     all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
     if all_prizes.data:
-        # 2. Фильтруем призы, доступные пользователю по количеству тренировок
         available_prizes = []
         for prize in all_prizes.data:
             trigger_workouts = prize.get("trigger_workouts", 0) or 0
             
-            # Проверяем, достаточно ли у пользователя тренировок
             if total_sundays >= trigger_workouts:
-                # Проверяем квоту на эту тренировку
                 quota = prize.get("quota_per_workout", 0) or 0
                 
                 if quota == 0:
-                    # Безлимитный приз — добавляем в пул
                     available_prizes.append(prize)
                 else:
-                    # Проверяем, сколько раз уже выдан этот приз сегодня
                     issued_count = await get_issued_prizes_count_for_workout(prize["id"], today)
                     
                     if issued_count < quota:
-                        # Добавляем в пул столько раз, сколько осталось до квоты
                         remaining = quota - issued_count
                         for _ in range(remaining * 2):
                             available_prizes.append(prize)
         
-        # 3. Выбираем случайный приз
         if available_prizes:
             selected_prize = random.choice(available_prizes)
             
-            # 4. Выдаём приз с промокодом
             result = await award_prize_with_promo(
                 user_id=profile["id"],
                 prize_id=selected_prize["id"],
@@ -240,7 +207,6 @@ async def handle_workout_photo(message: types.Message):
                 promo_code = result["promo_code"]
                 valid_days = selected_prize.get("valid_days", 14)
                 
-                # Уведомление в личку
                 response_text += (
                     f"\n🎁 <b>ТЫ ВЫИГРАЛ ПРИЗ!</b>\n"
                     f"🏆 {selected_prize['name']}\n"
@@ -249,23 +215,6 @@ async def handle_workout_photo(message: types.Message):
                     f"🎫 Промокод: <code>{promo_code}</code>\n"
                     f"⏰ Срок действия: {valid_days} дней\n"
                 )
-                
-                # Уведомление в общий чат
-                try:
-                    await telegram_bot.send_message(
-                        chat_id=MAIN_CHAT_ID,
-                        text=(
-                            f"🎁 <b>ВЫДАН ПРИЗ!</b>\n\n"
-                            f"👤 {profile['full_name']}\n"
-                            f"🏆 {selected_prize['name']}\n"
-                            f"🏢 {selected_prize.get('partner', 'LETSKI')}\n"
-                            f"💎 {selected_prize.get('value', '')}\n"
-                            f"📊 Тренировка: {total_sundays}"
-                        ),
-                        parse_mode="HTML"
-                    )
-                except Exception as e:
-                    print(f"⚠️ Не удалось отправить уведомление о призе в чат: {e}")
     
     await message.reply(response_text, parse_mode="HTML")
     
@@ -286,7 +235,6 @@ async def cmd_check_sunday(message: types.Message):
 
 @dp.message_handler(Command("clear_cache"))
 async def cmd_clear_cache(message: types.Message):
-    """Очистить кэш обработанных сообщений (для админа)"""
     if not is_admin(message.from_user.id):
         await message.answer("❌ Нет доступа")
         return
@@ -297,7 +245,6 @@ async def cmd_clear_cache(message: types.Message):
 
 @dp.message_handler(Command("file_id"))
 async def cmd_get_file_id(message: types.Message):
-    """Временная команда для получения file_id фото"""
     if not message.reply_to_message or not message.reply_to_message.photo:
         await message.reply("❌ Ответь на сообщение с фото, для которого нужно получить file_id")
         return
