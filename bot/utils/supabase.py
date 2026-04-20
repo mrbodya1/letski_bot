@@ -486,15 +486,18 @@ async def get_all_workouts_admin(limit: int = 50):
 
 async def delete_workout_admin(workout_id: str):
     """Удалить тренировку"""
+    # Получаем данные тренировки перед удалением
     workout = supabase.table("workouts").select("user_id, distance_km").eq("id", workout_id).execute()
     
     if workout.data:
         w = workout.data[0]
+        # Уменьшаем статистику в profiles
         supabase.table("profiles").update({
             "total_sundays": supabase.raw("total_sundays - 1"),
             "total_km": supabase.raw(f"total_km - {w['distance_km']}")
         }).eq("id", w["user_id"]).execute()
     
+    # Удаляем тренировку
     result = supabase.table("workouts").delete().eq("id", workout_id).execute()
     return True if result.data else False
 
