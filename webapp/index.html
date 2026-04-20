@@ -1899,7 +1899,7 @@
         window.markPrizeAsClaimed = (userPrizeId) => {
             if (!confirm('Отметить приз как использованный?')) return;
             
-            fetch(`${API_BASE}/api/admin/issued_prizes/${userPrizeId}/claim`, {
+            fetch(`${API_BASE}/api/admin/issued_prizes/${userPrizeId}/claim?user_id=${userId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' }
             })
