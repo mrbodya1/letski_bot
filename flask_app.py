@@ -186,6 +186,51 @@ def api_prizes():
     return result
 
 
+# ========== API ДЛЯ ОТКРЫТИЯ ПРИЗА ==========
+@app.route('/api/reveal_prize', methods=['POST'])
+def api_reveal_prize():
+    """Открыть приз (показать анимацию и получить реальный приз)"""
+    data = request.get_json()
+    user_prize_id = data.get('user_prize_id')
+    
+    if not user_prize_id:
+        return {"error": "user_prize_id required"}, 400
+    
+    async def reveal():
+        from bot.utils.supabase import supabase
+        
+        prize_data = supabase.table("user_prizes")\
+            .select("*, prizes_pool(*)")\
+            .eq("id", user_prize_id)\
+            .execute()
+        
+        if not prize_data.data:
+            return {"error": "Prize not found"}, 404
+        
+        prize = prize_data.data[0]
+        
+        if prize.get('is_revealed'):
+            return {
+                "success": True,
+                "prize": prize['prizes_pool'],
+                "promo_code": prize.get('promo_code')
+            }
+        
+        supabase.table("user_prizes")\
+            .update({"is_revealed": True})\
+            .eq("id", user_prize_id)\
+            .execute()
+        
+        return {
+            "success": True,
+            "prize": prize['prizes_pool'],
+            "promo_code": prize.get('promo_code')
+        }
+    
+    result = asyncio.run(reveal())
+    return result
+
+
 # ========== АДМИН-API ==========
 def _is_admin_request(req):
     """Проверка, что запрос от админа"""
@@ -501,7 +546,6 @@ def run_scheduler():
         now = datetime.now()
         today_str = now.date().isoformat()
         
-        # Понедельник 10:00
         if now.weekday() == 0 and now.hour == 10 and now.minute == 0:
             if last_report_date != today_str:
                 print(f"📤 Отправляю еженедельный отчёт за {today_str}...")
@@ -516,7 +560,6 @@ def run_scheduler():
             time.sleep(30)
 
 
-# Запускаем планировщик в отдельном потоке
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
