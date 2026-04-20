@@ -535,6 +535,23 @@ async def get_admin_stats():
         print(f"Error in get_admin_stats: {e}")
         return {"total_users": 0, "total_workouts": 0, "total_km": 0, "top_coaches": []}
 
+async def get_all_issued_prizes_admin():
+    """Получить все выданные призы с информацией об участниках"""
+    result = supabase.table("user_prizes")\
+        .select("*, profiles(full_name), prizes_pool(name)")\
+        .order("awarded_at", desc=True)\
+        .limit(100)\
+        .execute()
+    return result.data if result.data else []
+
+async def mark_prize_as_claimed(user_prize_id: str):
+    """Отметить приз как использованный"""
+    result = supabase.table("user_prizes")\
+        .update({"is_claimed": True})\
+        .eq("id", user_prize_id)\
+        .execute()
+    return True if result.data else False
+
 
 # ========== ЕЖЕНЕДЕЛЬНЫЙ ОТЧЁТ ==========
 async def send_weekly_report():
