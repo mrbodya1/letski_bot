@@ -523,6 +523,28 @@ def api_admin_delete_rating(rating_id):
     result = asyncio.run(delete())
     return {"success": True} if result else {"error": "Failed to delete"}, 500
 
+@app.route('/api/admin/issued_prizes')
+def api_admin_issued_prizes():
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def get_data():
+        from bot.utils.supabase import get_all_issued_prizes_admin
+        return await get_all_issued_prizes_admin()
+    
+    return asyncio.run(get_data())
+
+@app.route('/api/admin/issued_prizes/<user_prize_id>/claim', methods=['PATCH'])
+def api_admin_claim_prize(user_prize_id):
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    async def claim():
+        from bot.utils.supabase import mark_prize_as_claimed
+        return await mark_prize_as_claimed(user_prize_id)
+    
+    result = asyncio.run(claim())
+    return {"success": True} if result else {"error": "Failed to update"}, 500
 
 @app.route('/api/admin/stats')
 def api_admin_stats():
