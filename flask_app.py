@@ -495,6 +495,12 @@ def api_admin_delete_workout(workout_id):
     
     result = asyncio.run(delete())
     return {"success": True} if result else {"error": "Failed to delete"}, 500
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
+    
+    result = asyncio.run(delete())
+    return {"success": True} if result else {"error": "Failed to delete"}, 500
 
 
 @app.route('/api/admin/ratings')
