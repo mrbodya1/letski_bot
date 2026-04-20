@@ -202,6 +202,12 @@
             transition: all 0.2s ease;
         }
 
+        .prize-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border-color: #1e3c72;
+        }
+
         .prize-emoji {
             font-size: 26px;
         }
@@ -240,6 +246,34 @@
         .prize-arrow {
             font-size: 14px;
             opacity: 0.5;
+        }
+
+        .prize-item:hover .prize-arrow {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        .unrevealed {
+            background: linear-gradient(135deg, #FFF3CD, #FFE69C);
+            border-color: #FFD700;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1); }
+            50% { box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3); }
+            100% { box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1); }
+        }
+
+        .prize-promo {
+            background: #f5f7fa;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-top: 16px;
         }
 
         .badge-progress-item {
@@ -727,6 +761,43 @@
             margin: 8px 0 12px;
         }
 
+        /* Анимация рулетки */
+        .roulette-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .roulette-prize {
+            font-size: 48px;
+            margin: 20px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .roulette-animation {
+            animation: spin 0.5s ease-in-out;
+        }
+
+        @keyframes spin {
+            0% { transform: scale(1); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .roulette-spinning {
+            animation: spinLoop 0.1s infinite;
+        }
+
+        @keyframes spinLoop {
+            0% { content: "🎁"; }
+            25% { content: "🎲"; }
+            50% { content: "🎯"; }
+            75% { content: "🎪"; }
+            100% { content: "🎁"; }
+        }
+
         @media (max-width: 380px) {
             .admin-table th {
                 font-size: 10px;
@@ -859,7 +930,8 @@
                 <div class="logo">LETSKI<span>school</span></div>
             </div>
             <div class="card rules-content">
-    <h2>📜 ПРАВИЛА ПРОЕКТА «ДЛИТЕЛЬНАЯ»</h2>
+                <h2>📜 ПРАВИЛА ПРОЕКТА «ДЛИТЕЛЬНАЯ»</h2>
+                
                 <div style="margin-bottom: 20px;">
                     <h3>🏃 Тренировки</h3>
                     <p>• Каждое воскресенье в 9:00<br>
@@ -873,7 +945,7 @@
                     3️⃣ В подписи к фото укажи: #kmX #minX</p>
                     
                     <div style="margin-top: 16px; text-align: center;">
-                        <img src="https://imgur.com/a/2fVKVzm" alt="Пример отчёта" style="max-width: 100%; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <img src="https://i.imgur.com/placeholder.png" alt="Пример отчёта" style="max-width: 100%; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                         <p style="margin-top: 8px; font-size: 13px; color: #666;">Вот так выглядит правильный отчёт 👆<br>#km20 #min132</p>
                     </div>
                 </div>
@@ -1097,20 +1169,39 @@
                 if (myPrizes.length > 0) {
                     prizesList.innerHTML = myPrizes.map(p => {
                         const prize = p.prizes_pool || {};
-                        const linkUrl = prize.link_url || '#';
-                        const hasLink = linkUrl && linkUrl !== '#';
+                        const isRevealed = p.is_revealed || false;
                         
-                        return `
-                            <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
-                                <span class="prize-emoji">🎁</span>
-                                <div class="prize-info">
-                                    <h4>${prize.name || 'Приз'}</h4>
-                                    <p>${prize.partner || ''}</p>
+                        if (!isRevealed) {
+                            return `
+                                <div class="prize-item unrevealed" onclick="revealPrize('${p.id}')">
+                                    <span class="prize-emoji">🎁</span>
+                                    <div class="prize-info">
+                                        <h4>Новый приз!</h4>
+                                        <p>Нажми, чтобы открыть 🎰</p>
+                                    </div>
+                                    <span class="prize-arrow">→</span>
                                 </div>
-                                <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
-                                ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
-                            </div>
-                        `;
+                            `;
+                        } else {
+                            const linkUrl = prize.link_url || '#';
+                            const hasLink = linkUrl && linkUrl !== '#';
+                            const promoCode = p.promo_code || '—';
+                            
+                            return `
+                                <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
+                                    <span class="prize-emoji">✅</span>
+                                    <div class="prize-info">
+                                        <h4>${prize.name || 'Приз'}</h4>
+                                        <p>${prize.partner || ''}</p>
+                                        <p style="margin-top: 8px; font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 8px; display: inline-block;">
+                                            🎫 ${promoCode}
+                                        </p>
+                                    </div>
+                                    <span class="prize-status claimed">Получен</span>
+                                    ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
+                                </div>
+                            `;
+                        }
                     }).join('');
                     document.getElementById('prizes-count').textContent = myPrizes.length;
                 } else {
@@ -1271,20 +1362,39 @@
                 if (data.my && data.my.length > 0) {
                     myContainer.innerHTML = data.my.map(p => {
                         const prize = p.prizes_pool || {};
-                        const linkUrl = prize.link_url || '#';
-                        const hasLink = linkUrl && linkUrl !== '#';
+                        const isRevealed = p.is_revealed || false;
                         
-                        return `
-                            <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
-                                <span class="prize-emoji">✅</span>
-                                <div class="prize-info">
-                                    <h4>${prize.name || 'Приз'}</h4>
-                                    <p>${prize.partner || ''}</p>
+                        if (!isRevealed) {
+                            return `
+                                <div class="prize-item unrevealed" onclick="revealPrize('${p.id}')">
+                                    <span class="prize-emoji">🎁</span>
+                                    <div class="prize-info">
+                                        <h4>Новый приз!</h4>
+                                        <p>Нажми, чтобы открыть 🎰</p>
+                                    </div>
+                                    <span class="prize-arrow">→</span>
                                 </div>
-                                <span class="prize-status ${p.is_claimed ? 'claimed' : ''}">${p.is_claimed ? 'Получен' : 'Новый'}</span>
-                                ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
-                            </div>
-                        `;
+                            `;
+                        } else {
+                            const linkUrl = prize.link_url || '#';
+                            const hasLink = linkUrl && linkUrl !== '#';
+                            const promoCode = p.promo_code || '—';
+                            
+                            return `
+                                <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
+                                    <span class="prize-emoji">✅</span>
+                                    <div class="prize-info">
+                                        <h4>${prize.name || 'Приз'}</h4>
+                                        <p>${prize.partner || ''}</p>
+                                        <p style="margin-top: 8px; font-family: monospace; background: #f0f0f0; padding: 4px 8px; border-radius: 8px; display: inline-block;">
+                                            🎫 ${promoCode}
+                                        </p>
+                                    </div>
+                                    <span class="prize-status claimed">Получен</span>
+                                    ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
+                                </div>
+                            `;
+                        }
                     }).join('');
                 } else {
                     myContainer.innerHTML = '<div class="empty-state">У тебя пока нет призов</div>';
@@ -1295,6 +1405,82 @@
                 myContainer.innerHTML = '<div class="loading">Ошибка загрузки</div>';
             }
         }
+        
+        // ========== ОТКРЫТИЕ ПРИЗА С АНИМАЦИЕЙ ==========
+        window.revealPrize = async (userPrizeId) => {
+            const modalHtml = `
+                <div class="admin-modal" id="roulette-modal">
+                    <div class="admin-modal-content" style="text-align: center;">
+                        <h3>🎰 Открываем приз...</h3>
+                        <div class="roulette-container">
+                            <div class="roulette-prize" id="roulette-animation">🎁</div>
+                            <p id="roulette-text">Крутим барабан...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const emojis = ['🎁', '🎲', '🎯', '🎪', '🎨', '🎭', '🎰', '🎲'];
+            let count = 0;
+            const interval = setInterval(() => {
+                const animEl = document.getElementById('roulette-animation');
+                if (animEl) {
+                    animEl.textContent = emojis[count % emojis.length];
+                }
+                count++;
+            }, 100);
+            
+            setTimeout(async () => {
+                clearInterval(interval);
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/reveal_prize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_prize_id: userPrizeId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const prize = data.prize;
+                        const promoCode = data.promo_code;
+                        
+                        const modal = document.getElementById('roulette-modal');
+                        if (modal) {
+                            modal.innerHTML = `
+                                <div class="admin-modal-content" style="text-align: center;">
+                                    <h3>🎉 Поздравляем!</h3>
+                                    <div class="roulette-container">
+                                        <div class="roulette-prize">🎁</div>
+                                        <h4 style="margin: 16px 0;">${prize.name}</h4>
+                                        <p>${prize.partner || ''}</p>
+                                        <p style="margin-top: 8px;"><b>${prize.value || ''}</b></p>
+                                        <div class="prize-promo">
+                                            🎫 Промокод: <strong>${promoCode}</strong>
+                                        </div>
+                                        <p style="margin-top: 12px; font-size: 13px; color: #666;">
+                                            ⏰ Срок действия: ${prize.valid_days || 14} дней
+                                        </p>
+                                    </div>
+                                    <div class="admin-modal-buttons" style="margin-top: 20px;">
+                                        <button class="btn-primary" onclick="document.getElementById('roulette-modal').remove(); loadProfile();">Круто! 🎉</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+                        document.getElementById('roulette-modal')?.remove();
+                    }
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                    document.getElementById('roulette-modal')?.remove();
+                }
+            }, 2000);
+        };
         
         // ========== АДМИН-ПАНЕЛЬ ==========
         function loadAdminMainMenu() {
