@@ -641,3 +641,119 @@ async def create_badge(data: dict):
     
     result = supabase.table("badges_catalog").insert(insert_data).execute()
     return result.data[0] if result.data else None
+
+# ========== ЕЖЕНЕДЕЛЬНЫЙ ОТЧЁТ ==========
+async def send_weekly_report():
+    """Отправляет сводный отчёт в общий чат по понедельникам в 10:00"""
+    from config import MAIN_CHAT_ID
+    from flask_app import telegram_bot
+    from datetime import datetime, timedelta
+    
+    # Определяем дату прошлого воскресенья
+    today = datetime.now().date()
+    days_since_sunday = (today.weekday() + 1) % 7
+    if days_since_sunday == 0:
+        last_sunday = today
+    else:
+        last_sunday = today - timedelta(days=days_since_sunday)
+    
+    last_sunday_str = last_sunday.isoformat()
+    
+    # 1. Статистика за воскресенье
+    workouts = supabase.table("workouts")\
+        .select("*, profiles(full_name)")\
+        .eq("sunday_date", last_sunday_str)\
+        .execute()
+    
+    if not workouts.data:
+        print(f"ℹ️ Нет тренировок за {last_sunday_str}, отчёт не отправлен")
+        return
+    
+    participants = len(workouts.data)
+    total_km = sum(w["distance_km"] for w in workouts.data)
+    avg_pace = sum(w["duration_min"] / w["distance_km"] for w in workouts.data) / participants
+    pace_min = int(avg_pace)
+    pace_sec = int((avg_pace - pace_min) * 60)
+    
+    # 2. Топ-10 по км
+    rating_km = supabase.table("rating_by_km").select("*").limit(10).execute()
+    
+    # 3. Топ-10 по тренировкам
+    rating_workouts = supabase.table("rating_by_workouts").select("*").limit(10).execute()
+    
+    # 4. Топ-10 по серии
+    rating_streak = supabase.table("rating_by_streak").select("*").limit(10).execute()
+    
+    # 5. Выданные призы за воскресенье
+    prizes = supabase.table("user_prizes")\
+        .select("*, prizes_pool(name), profiles(full_name)")\
+        .eq("awarded_for", f"workout_{last_sunday_str}")\
+        .execute()
+    
+    # 6. Полученные бейджи за воскресенье
+    badges = supabase.table("badges")\
+        .select("*, profiles(full_name), badges_catalog(name, emoji)")\
+        .gte("awarded_at", last_sunday_str)\
+        .lt("awarded_at", (last_sunday + timedelta(days=1)).isoformat())\
+        .execute()
+    
+    # Формируем сообщение
+    report = f"📊 <b>ЕЖЕНЕДЕЛЬНЫЙ ОТЧЁТ</b>\n"
+    report += f"📅 Воскресенье {last_sunday_str}\n\n"
+    
+    report += f"👥 Участников: {participants}\n"
+    report += f"📏 Общий км: {total_km:.1f} км\n"
+    report += f"⚡️ Средний темп: {pace_min}:{pace_sec:02d} мин/км\n\n"
+    
+    # Топ-10 по км
+    if rating_km.data:
+        report += "🏆 <b>ТОП-10 ПО КИЛОМЕТРАМ</b>\n"
+        for i, r in enumerate(rating_km.data[:10], 1):
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            report += f"{medal} {r['full_name']} — {r['total_km']} км\n"
+        report += "\n"
+    
+    # Топ-10 по тренировкам
+    if rating_workouts.data:
+        report += "🏃 <b>ТОП-10 ПО ТРЕНИРОВКАМ</b>\n"
+        for i, r in enumerate(rating_workouts.data[:10], 1):
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            report += f"{medal} {r['full_name']} — {r['total_sundays']} тр\n"
+        report += "\n"
+    
+    # Топ-10 по серии
+    if rating_streak.data:
+        report += "🔥 <b>ТОП-10 ПО СЕРИИ</b>\n"
+        for i, r in enumerate(rating_streak.data[:10], 1):
+            if r['sunday_streak'] == 0:
+                continue
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            report += f"{medal} {r['full_name']} — {r['sunday_streak']} нед\n"
+        report += "\n"
+    
+    # Выданные призы
+    if prizes.data:
+        report += "🎁 <b>ВЫДАННЫЕ ПРИЗЫ</b>\n"
+        for p in prizes.data:
+            report += f"• {p['profiles']['full_name']} — {p['prizes_pool']['name']}\n"
+        report += "\n"
+    
+    # Полученные бейджи
+    if badges.data:
+        report += "🏅 <b>НОВЫЕ БЕЙДЖИ</b>\n"
+        for b in badges.data:
+            badge_info = b.get('badges_catalog', {})
+            emoji = badge_info.get('emoji', '🏅')
+            name = badge_info.get('name', b['badge_type'])
+            report += f"• {b['profiles']['full_name']} — {emoji} {name}\n"
+    
+    # Отправляем
+    try:
+        await telegram_bot.send_message(
+            chat_id=MAIN_CHAT_ID,
+            text=report,
+            parse_mode="HTML"
+        )
+        print(f"✅ Еженедельный отчёт отправлен за {last_sunday_str}")
+    except Exception as e:
+        print(f"❌ Ошибка отправки отчёта: {e}")
