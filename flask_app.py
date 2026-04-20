@@ -1,6 +1,9 @@
 import os
 import asyncio
 import logging
+import threading
+import time
+from datetime import datetime
 from flask import Flask, request, abort, send_from_directory
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
@@ -28,6 +31,7 @@ app = Flask(__name__)
 WEBAPP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webapp')
 
 
+# ========== ОСНОВНЫЕ МАРШРУТЫ ==========
 @app.route('/')
 def index():
     return "🤖 Letski Bot is running!"
@@ -76,6 +80,7 @@ def telegram_webhook():
     asyncio.run(process())
     return 'OK'
 
+
 # ========== API ДЛЯ WEB APP ==========
 @app.route('/api/profile')
 def api_profile():
@@ -106,11 +111,11 @@ def api_profile():
                 "id": profile["id"],
                 "full_name": profile["full_name"],
                 "gender": profile["gender"],
+                "role": profile.get("role", "user"),
                 "sunday_streak": profile.get("sunday_streak", 0) or 0,
                 "max_sunday_streak": profile.get("max_sunday_streak", 0) or 0,
                 "total_sundays": profile.get("total_sundays", 0) or 0,
                 "total_km": profile.get("total_km", 0) or 0,
-                "role": profile.get("role", "user"),
                 "badges": badges or [],
                 "prizes": prizes or [],
                 "workouts": workouts or []
@@ -180,11 +185,24 @@ def api_prizes():
     result = asyncio.run(get_data())
     return result
 
-# ========== АДМИН-API ДЛЯ WEB APP ==========
+
+# ========== АДМИН-API ==========
+def _is_admin_request(req):
+    """Проверка, что запрос от админа"""
+    user_id = req.args.get('user_id')
+    if not user_id:
+        return False
+    
+    async def check():
+        from bot.utils.supabase import get_profile
+        profile = await get_profile(int(user_id))
+        return profile and profile.get('role') == 'admin'
+    
+    return asyncio.run(check())
+
 
 @app.route('/api/admin/coaches')
 def api_admin_coaches():
-    """Получить список всех тренеров (для админки)"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -197,7 +215,6 @@ def api_admin_coaches():
 
 @app.route('/api/admin/coaches', methods=['POST'])
 def api_admin_create_coach():
-    """Создать нового тренера"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -218,7 +235,6 @@ def api_admin_create_coach():
 
 @app.route('/api/admin/coaches/<coach_id>', methods=['PATCH'])
 def api_admin_update_coach(coach_id):
-    """Обновить тренера"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -234,7 +250,6 @@ def api_admin_update_coach(coach_id):
 
 @app.route('/api/admin/coaches/<coach_id>', methods=['DELETE'])
 def api_admin_delete_coach(coach_id):
-    """Удалить тренера"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -248,7 +263,6 @@ def api_admin_delete_coach(coach_id):
 
 @app.route('/api/admin/prizes')
 def api_admin_prizes():
-    """Получить все призы (для админки)"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -261,7 +275,6 @@ def api_admin_prizes():
 
 @app.route('/api/admin/prizes', methods=['POST'])
 def api_admin_create_prize():
-    """Создать новый приз"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -277,7 +290,6 @@ def api_admin_create_prize():
 
 @app.route('/api/admin/prizes/<prize_id>', methods=['PATCH'])
 def api_admin_update_prize(prize_id):
-    """Обновить приз"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -293,7 +305,6 @@ def api_admin_update_prize(prize_id):
 
 @app.route('/api/admin/prizes/<prize_id>', methods=['DELETE'])
 def api_admin_delete_prize(prize_id):
-    """Удалить приз"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -307,7 +318,6 @@ def api_admin_delete_prize(prize_id):
 
 @app.route('/api/admin/badges')
 def api_admin_badges():
-    """Получить каталог бейджей (для админки)"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -320,7 +330,6 @@ def api_admin_badges():
 
 @app.route('/api/admin/badges', methods=['POST'])
 def api_admin_create_badge():
-    """Создать новый бейдж"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -334,9 +343,23 @@ def api_admin_create_badge():
     return result if result else {"error": "Failed to create"}, 500
 
 
+@app.route('/api/admin/badges/<badge_id>', methods=['PATCH'])
+def api_admin_update_badge(badge_id):
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def update():
+        from bot.utils.supabase import update_badge
+        return await update_badge(badge_id, data)
+    
+    result = asyncio.run(update())
+    return result if result else {"error": "Failed to update"}, 500
+
+
 @app.route('/api/admin/schedule')
 def api_admin_schedule():
-    """Получить расписание"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -349,7 +372,6 @@ def api_admin_schedule():
 
 @app.route('/api/admin/schedule', methods=['POST'])
 def api_admin_create_schedule():
-    """Создать/обновить расписание"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -365,7 +387,6 @@ def api_admin_create_schedule():
 
 @app.route('/api/admin/schedule/<schedule_id>', methods=['DELETE'])
 def api_admin_delete_schedule(schedule_id):
-    """Удалить расписание"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -379,7 +400,6 @@ def api_admin_delete_schedule(schedule_id):
 
 @app.route('/api/admin/users')
 def api_admin_users():
-    """Получить список участников"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -392,7 +412,6 @@ def api_admin_users():
 
 @app.route('/api/admin/users/<user_id>', methods=['PATCH'])
 def api_admin_update_user(user_id):
-    """Обновить участника"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -408,7 +427,6 @@ def api_admin_update_user(user_id):
 
 @app.route('/api/admin/workouts')
 def api_admin_workouts():
-    """Получить все тренировки"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -423,7 +441,6 @@ def api_admin_workouts():
 
 @app.route('/api/admin/workouts/<workout_id>', methods=['DELETE'])
 def api_admin_delete_workout(workout_id):
-    """Удалить тренировку"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -437,7 +454,6 @@ def api_admin_delete_workout(workout_id):
 
 @app.route('/api/admin/ratings')
 def api_admin_ratings():
-    """Получить все оценки тренеров"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -452,7 +468,6 @@ def api_admin_ratings():
 
 @app.route('/api/admin/ratings/<rating_id>', methods=['DELETE'])
 def api_admin_delete_rating(rating_id):
-    """Удалить оценку"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -466,7 +481,6 @@ def api_admin_delete_rating(rating_id):
 
 @app.route('/api/admin/stats')
 def api_admin_stats():
-    """Получить статистику для дашборда"""
     if not _is_admin_request(request):
         return {"error": "Unauthorized"}, 403
     
@@ -477,27 +491,37 @@ def api_admin_stats():
     return asyncio.run(get_data())
 
 
-def _is_admin_request(req):
-    """Проверка, что запрос от админа (через user_id в параметрах)"""
-    user_id = req.args.get('user_id')
-    if not user_id:
-        return False
+# ========== ПЛАНИРОВЩИК ЕЖЕНЕДЕЛЬНОГО ОТЧЁТА ==========
+def run_scheduler():
+    """Фоновая задача для отправки еженедельного отчёта"""
+    print("🕒 Планировщик запущен")
+    last_report_date = None
     
-    # Проверяем через БД
-    async def check():
-        from bot.utils.supabase import get_profile
-        profile = await get_profile(int(user_id))
-        return profile and profile.get('role') == 'admin'
-    
-    return asyncio.run(check())
+    while True:
+        now = datetime.now()
+        today_str = now.date().isoformat()
+        
+        # Понедельник 10:00
+        if now.weekday() == 0 and now.hour == 10 and now.minute == 0:
+            if last_report_date != today_str:
+                print(f"📤 Отправляю еженедельный отчёт за {today_str}...")
+                try:
+                    from bot.utils.supabase import send_weekly_report
+                    asyncio.run(send_weekly_report())
+                    last_report_date = today_str
+                except Exception as e:
+                    print(f"❌ Ошибка в планировщике: {e}")
+            time.sleep(60)
+        else:
+            time.sleep(30)
 
-@dp.message_handler(content_types=['photo'])
-async def get_file_id(message: types.Message):
-    file_id = message.photo[-1].file_id
-    await message.reply(f"FILE_ID: `{file_id}`", parse_mode="Markdown")
+
+# Запускаем планировщик в отдельном потоке
+scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+scheduler_thread.start()
 
 
-# Импортируем хендлеры
+# ========== ИМПОРТ ХЕНДЛЕРОВ ==========
 import bot.handlers.start
 import bot.handlers.workout
 import bot.handlers.rating
