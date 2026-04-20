@@ -491,6 +491,11 @@ def _is_admin_request(req):
     
     return asyncio.run(check())
 
+@dp.message_handler(content_types=['photo'])
+async def get_file_id(message: types.Message):
+    file_id = message.photo[-1].file_id
+    await message.reply(f"FILE_ID: `{file_id}`", parse_mode="Markdown")
+
 
 # Импортируем хендлеры
 import bot.handlers.start
