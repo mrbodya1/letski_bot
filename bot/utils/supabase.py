@@ -1,6 +1,7 @@
 import os
 import random
-from datetime import date
+import string
+from datetime import date, datetime, timedelta
 from supabase import create_client, Client
 from config import SUPABASE_URL, SUPABASE_KEY
 
@@ -104,6 +105,27 @@ async def update_workout_repost(workout_id: str, repost_message_id: int):
     supabase.table("workouts").update({"repost_message_id": repost_message_id}).eq("id", workout_id).execute()
 
 
+async def get_workouts_by_telegram_id(telegram_id: int):
+    """Получить все тренировки пользователя по telegram_id"""
+    profile = await get_profile(telegram_id)
+    if not profile:
+        return []
+    
+    result = supabase.table("workouts")\
+        .select("*")\
+        .eq("user_id", profile["id"])\
+        .order("sunday_date", desc=True)\
+        .execute()
+    
+    return result.data if result.data else []
+
+
+async def delete_workout(workout_id: str):
+    """Удалить тренировку по ID"""
+    result = supabase.table("workouts").delete().eq("id", workout_id).execute()
+    return result.data[0] if result.data else None
+
+
 # ========== ОЦЕНКИ ==========
 async def create_rating(workout_id: str, user_id: str, coach_id: str, pro: int, presentation: int, friendly: int, comment: str = None):
     """Создать оценку тренера"""
@@ -126,44 +148,6 @@ async def has_rating_for_workout(workout_id: str):
     return len(result.data) > 0 if result.data else False
 
 
-# ========== ПРИЗЫ ==========
-async def get_random_prize_for_user(user_id: str):
-    """Получить случайный приз (без повторов)"""
-    # Все активные призы
-    all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
-    
-    if not all_prizes.data:
-        return None
-    
-    # Уже выданные пользователю
-    user_prizes = supabase.table("user_prizes").select("prize_id").eq("user_id", user_id).execute()
-    used_ids = [up["prize_id"] for up in user_prizes.data] if user_prizes.data else []
-    
-    available = [p for p in all_prizes.data if p["id"] not in used_ids]
-    
-    if not available:
-        return None
-    
-    return random.choice(available)
-
-
-async def award_prize(user_id: str, prize_id: str, awarded_for: str):
-    """Выдать приз пользователю"""
-    data = {
-        "user_id": user_id,
-        "prize_id": prize_id,
-        "awarded_for": awarded_for
-    }
-    result = supabase.table("user_prizes").insert(data).execute()
-    return result.data[0] if result.data else None
-
-
-# ========== РЕЙТИНГИ ==========
-async def get_rating_by_km():
-    """Рейтинг по километражу"""
-    result = supabase.table("rating_by_km").select("*").limit(50).execute()
-    return result.data if result.data else []
-
 # ========== БЕЙДЖИ ==========
 async def get_user_badges(user_id: str):
     """Получить бейджи пользователя"""
@@ -171,7 +155,59 @@ async def get_user_badges(user_id: str):
     return result.data if result.data else []
 
 
+async def get_badges_catalog():
+    """Получить все бейджи из каталога"""
+    result = supabase.table("badges_catalog").select("*").order("created_at").execute()
+    return result.data if result.data else []
+
+
+async def check_and_award_badges(user_id: str, stats: dict):
+    """Универсальная проверка и выдача бейджей"""
+    catalog = supabase.table("badges_catalog").select("*").eq("is_active", True).execute()
+    if not catalog.data:
+        return []
+    
+    earned = supabase.table("badges").select("badge_type").eq("user_id", user_id).execute()
+    earned_types = {b['badge_type'] for b in earned.data} if earned.data else set()
+    
+    awarded = []
+    
+    for badge in catalog.data:
+        if badge['badge_type'] in earned_types:
+            continue
+        
+        should_award = False
+        trigger_type = badge.get('trigger_type')
+        trigger_value = badge.get('trigger_value')
+        
+        if trigger_type == 'first_workout' and stats.get('total_workouts', 0) >= 1:
+            should_award = True
+        elif trigger_type == 'streak' and stats.get('streak', 0) >= trigger_value:
+            should_award = True
+        elif trigger_type == 'total_km' and stats.get('total_km', 0) >= trigger_value:
+            should_award = True
+        elif trigger_type == 'total_workouts' and stats.get('total_workouts', 0) >= trigger_value:
+            should_award = True
+        
+        if should_award:
+            supabase.table("badges").insert({
+                "user_id": user_id,
+                "badge_type": badge['badge_type'],
+                "awarded_at": "now()"
+            }).execute()
+            awarded.append(badge)
+    
+    return awarded
+
+
 # ========== ПРИЗЫ ==========
+def generate_promo_code():
+    """Генерирует уникальный промокод формата LSK-XXXXXX"""
+    chars = string.ascii_uppercase + string.digits
+    code = ''.join(random.choices(chars, k=6))
+    return f"LSK-{code}"
+
+
 async def get_all_active_prizes():
     """Получить все активные призы"""
     result = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
@@ -184,78 +220,82 @@ async def get_user_prizes(user_id: str):
     return result.data if result.data else []
 
 
+async def get_random_prize_for_user(user_id: str):
+    """Получить случайный приз (без повторов)"""
+    all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
+    
+    if not all_prizes.data:
+        return None
+    
+    user_prizes = supabase.table("user_prizes").select("prize_id").eq("user_id", user_id).execute()
+    used_ids = [up["prize_id"] for up in user_prizes.data] if user_prizes.data else []
+    
+    available = [p for p in all_prizes.data if p["id"] not in used_ids]
+    
+    if not available:
+        return None
+    
+    return random.choice(available)
+
+
+async def award_prize(user_id: str, prize_id: str, awarded_for: str):
+    """Выдать приз пользователю (старая версия)"""
+    data = {
+        "user_id": user_id,
+        "prize_id": prize_id,
+        "awarded_for": awarded_for
+    }
+    result = supabase.table("user_prizes").insert(data).execute()
+    return result.data[0] if result.data else None
+
+
+async def get_issued_prizes_count_for_workout(prize_id: str, workout_date: str):
+    """Возвращает количество раз, которое приз был выдан в указанную дату"""
+    result = supabase.table("user_prizes")\
+        .select("id", count="exact")\
+        .eq("prize_id", prize_id)\
+        .eq("awarded_for", f"workout_{workout_date}")\
+        .execute()
+    
+    return result.count if hasattr(result, 'count') else 0
+
+
+async def award_prize_with_promo(user_id: str, prize_id: str, awarded_for: str, valid_days: int):
+    """Выдать приз с промокодом"""
+    promo_code = generate_promo_code()
+    
+    existing = supabase.table("user_prizes").select("id").eq("promo_code", promo_code).execute()
+    while existing.data:
+        promo_code = generate_promo_code()
+        existing = supabase.table("user_prizes").select("id").eq("promo_code", promo_code).execute()
+    
+    data = {
+        "user_id": user_id,
+        "prize_id": prize_id,
+        "promo_code": promo_code,
+        "awarded_for": awarded_for,
+        "awarded_at": "now()",
+        "is_claimed": False
+    }
+    
+    result = supabase.table("user_prizes").insert(data).execute()
+    
+    if result.data:
+        return {"id": result.data[0]["id"], "promo_code": promo_code}
+    return None
+
+
 # ========== РЕЙТИНГИ ==========
+async def get_rating_by_km():
+    """Рейтинг по километражу"""
+    result = supabase.table("rating_by_km").select("*").limit(50).execute()
+    return result.data if result.data else []
+
+
 async def get_rating_by_workouts():
     """Рейтинг по количеству тренировок"""
     result = supabase.table("rating_by_workouts").select("*").limit(50).execute()
     return result.data if result.data else []
-
-# ========== КАТАЛОГ БЕЙДЖЕЙ ==========
-async def get_badges_catalog():
-    """Получить все бейджи из каталога"""
-    result = supabase.table("badges_catalog").select("*").order("created_at").execute()
-    return result.data if result.data else []
-
-
-async def get_active_badges_catalog():
-    """Получить активные бейджи"""
-    result = supabase.table("badges_catalog").select("*").eq("is_active", true).execute()
-    return result.data if result.data else []
-
-
-# ========== УПРАВЛЕНИЕ ПРИЗАМИ ==========
-async def get_all_prizes_admin():
-    """Получить все призы для админки"""
-    result = supabase.table("prizes_pool").select("*").order("created_at", desc=True).execute()
-    return result.data if result.data else []
-
-
-async def create_prize(name: str, partner: str, prize_type: str, value: str, category: str, promo_code: str):
-    """Создать новый приз"""
-    data = {
-        "name": name,
-        "partner": partner,
-        "type": prize_type,
-        "value": value,
-        "category": category,
-        "promo_code": promo_code
-    }
-    result = supabase.table("prizes_pool").insert(data).execute()
-    return result.data[0] if result.data else None
-
-
-async def toggle_prize_active(prize_id: str):
-    """Переключить активность приза"""
-    # Получаем текущий статус
-    current = supabase.table("prizes_pool").select("is_active, name").eq("id", prize_id).execute()
-    if not current.data:
-        return None
-    
-    new_status = not current.data[0]["is_active"]
-    result = supabase.table("prizes_pool").update({"is_active": new_status}).eq("id", prize_id).execute()
-    
-    if result.data:
-        return {"name": current.data[0]["name"], "is_active": new_status}
-    return None
-
-
-async def update_prize_quantity(prize_id: str, total: int):
-    """Обновить количество призов"""
-    result = supabase.table("prizes_pool").update({
-        "total_quantity": total,
-        "remaining_quantity": total
-    }).eq("id", prize_id).execute()
-    return result.data[0] if result.data else None
-
-
-async def decrement_prize_quantity(prize_id: str):
-    """Уменьшить оставшееся количество приза на 1"""
-    current = supabase.table("prizes_pool").select("remaining_quantity").eq("id", prize_id).execute()
-    if current.data and current.data[0]["remaining_quantity"] > 0:
-        new_qty = current.data[0]["remaining_quantity"] - 1
-        supabase.table("prizes_pool").update({"remaining_quantity": new_qty}).eq("id", prize_id).execute()
-        return new_qty
-    return 0
 
 
 async def get_rating_by_streak():
@@ -263,132 +303,8 @@ async def get_rating_by_streak():
     result = supabase.table("rating_by_streak").select("*").limit(50).execute()
     return result.data if result.data else []
 
-async def create_prize_with_link(name: str, partner: str, prize_type: str, value: str, category: str, promo_code: str, link_url: str = None):
-    """Создать новый приз со ссылкой"""
-    data = {
-        "name": name,
-        "partner": partner,
-        "type": prize_type,
-        "value": value,
-        "category": category,
-        "promo_code": promo_code
-    }
-    if link_url:
-        data["link_url"] = link_url
-    
-    result = supabase.table("prizes_pool").insert(data).execute()
-    return result.data[0] if result.data else None
-    
-async def get_workouts_by_telegram_id(telegram_id: int):
-    """Получить все тренировки пользователя по telegram_id"""
-    # Сначала получаем profile_id
-    profile = await get_profile(telegram_id)
-    if not profile:
-        return []
-    
-    result = supabase.table("workouts")\
-        .select("*")\
-        .eq("user_id", profile["id"])\
-        .order("sunday_date", desc=True)\
-        .execute()
-    
-    return result.data if result.data else []
-
-# ========== УНИВЕРСАЛЬНАЯ ПРОВЕРКА БЕЙДЖЕЙ ==========
-async def check_and_award_badges(user_id: str, stats: dict):
-    print(f"🔍 Проверяем бейджи для user={user_id}, stats={stats}")
-    
-    catalog = supabase.table("badges_catalog").select("*").eq("is_active", True).execute()
-    print(f"📦 Найдено бейджей в каталоге: {len(catalog.data) if catalog.data else 0}")
-    
-    earned = supabase.table("badges").select("badge_type").eq("user_id", user_id).execute()
-    earned_types = {b['badge_type'] for b in earned.data} if earned.data else set()
-    print(f"✅ Уже есть бейджи: {earned_types}")
-    
-    awarded = []
-    
-    for badge in catalog.data:
-        if badge['badge_type'] in earned_types:
-            continue
-        
-        should_award = False
-        
-        if badge['trigger_type'] == 'first_workout' and stats.get('total_workouts', 0) >= 1:
-            should_award = True
-        elif badge['trigger_type'] == 'streak' and stats.get('streak', 0) >= badge['trigger_value']:
-            should_award = True
-        elif badge['trigger_type'] == 'total_km' and stats.get('total_km', 0) >= badge['trigger_value']:
-            should_award = True
-        elif badge['trigger_type'] == 'total_workouts' and stats.get('total_workouts', 0) >= badge['trigger_value']:
-            should_award = True
-        
-        if should_award:
-            print(f"🎁 Выдаём бейдж: {badge['name']}")
-            supabase.table("badges").insert({
-                "user_id": user_id,
-                "badge_type": badge['badge_type'],
-                "awarded_at": "now()"
-            }).execute()
-            awarded.append(badge)
-    
-    print(f"🏅 Всего выдано бейджей: {len(awarded)}")
-    return awarded
-
-
-# ========== УНИВЕРСАЛЬНАЯ ВЫДАЧА ПРИЗОВ ==========
-async def check_and_award_prize(user_id: str, total_workouts: int):
-    """
-    Выдаёт приз в зависимости от количества тренировок.
-    Уровни: 4-9 (common), 10-16 (rare), 17-23 (epic), 24-29 (legendary)
-    Возвращает (prize, level_name) или (None, None)
-    """
-    # Определяем уровень
-    if 4 <= total_workouts <= 9:
-        level = 'common'
-        level_name = 'Базовый'
-    elif 10 <= total_workouts <= 16:
-        level = 'rare'
-        level_name = 'Редкий'
-    elif 17 <= total_workouts <= 23:
-        level = 'epic'
-        level_name = 'Эпический'
-    elif 24 <= total_workouts <= 29:
-        level = 'legendary'
-        level_name = 'Легендарный'
-    else:
-        return None, None
-    
-    # Проверяем, не выдан ли уже приз этого уровня
-    existing = supabase.table("user_prizes").select("*").eq("user_id", user_id).eq("awarded_for", f"level_{level}").execute()
-    if existing.data:
-        return None, None
-    
-    # Ищем приз нужного уровня
-    prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).eq("level", level).execute()
-    
-    if not prizes.data:
-        # Если нет призов нужного уровня, берём любые активные
-        prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
-    
-    if not prizes.data:
-        return None, None
-    
-    import random
-    prize = random.choice(prizes.data)
-    
-    # Выдаём приз
-    supabase.table("user_prizes").insert({
-        "user_id": user_id,
-        "prize_id": prize['id'],
-        "awarded_for": f"level_{level}",
-        "awarded_at": "now()",
-        "is_claimed": False
-    }).execute()
-    
-    return prize, level_name
 
 # ========== АДМИН-ФУНКЦИИ ==========
-
 async def get_all_coaches_admin():
     """Получить всех тренеров с полной информацией"""
     result = supabase.table("coaches").select("*").order("full_name").execute()
@@ -431,28 +347,12 @@ async def get_all_prizes_admin():
 
 async def create_prize_full(data: dict):
     """Создать приз со всеми полями"""
-    allowed = [
-        "name", "description", "partner", "type", "value", "level", 
-        "promo_code", "link_url", "is_active", "total_quantity", 
-        "remaining_quantity", "category"
-    ]
-    insert_data = {k: v for k, v in data.items() if k in allowed and v is not None}
+    allowed = ["name", "description", "partner", "value", "trigger_workouts", 
+               "quota_per_workout", "valid_days", "link_url", "is_active"]
+    insert_data = {k: v for k, v in data.items() if k in allowed}
     
     if not insert_data.get("name"):
         return None
-    
-    # Генерируем промокод если не указан
-    if not insert_data.get("promo_code"):
-        import random
-        import string
-        insert_data["promo_code"] = f"LETSKI-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
-    
-    # Если количество не указано, ставим -1 (безлимитно)
-    if "total_quantity" not in insert_data:
-        insert_data["total_quantity"] = -1
-        insert_data["remaining_quantity"] = -1
-    elif insert_data.get("total_quantity") and "remaining_quantity" not in insert_data:
-        insert_data["remaining_quantity"] = insert_data["total_quantity"]
     
     result = supabase.table("prizes_pool").insert(insert_data).execute()
     return result.data[0] if result.data else None
@@ -460,8 +360,8 @@ async def create_prize_full(data: dict):
 
 async def update_prize(prize_id: str, data: dict):
     """Обновить приз"""
-    allowed = ["name", "description", "partner", "type", "value", "level", 
-               "promo_code", "link_url", "is_active", "total_quantity", "remaining_quantity"]
+    allowed = ["name", "description", "partner", "value", "trigger_workouts",
+               "quota_per_workout", "valid_days", "link_url", "is_active"]
     update_data = {k: v for k, v in data.items() if k in allowed}
     
     if not update_data:
@@ -473,10 +373,9 @@ async def update_prize(prize_id: str, data: dict):
 
 async def delete_prize(prize_id: str):
     """Удалить приз (только если не выдан)"""
-    # Проверяем, не выдан ли приз
     issued = supabase.table("user_prizes").select("id").eq("prize_id", prize_id).execute()
     if issued.data:
-        return False  # Нельзя удалить выданный приз
+        return False
     
     result = supabase.table("prizes_pool").delete().eq("id", prize_id).execute()
     return True if result.data else False
@@ -486,6 +385,28 @@ async def get_badges_catalog_full():
     """Получить полный каталог бейджей (включая неактивные)"""
     result = supabase.table("badges_catalog").select("*").order("created_at").execute()
     return result.data if result.data else []
+
+
+async def create_badge(data: dict):
+    """Создать новый бейдж в каталоге"""
+    required = ["badge_type", "name", "emoji", "trigger_type"]
+    for field in required:
+        if field not in data:
+            return None
+    
+    insert_data = {
+        "badge_type": data["badge_type"],
+        "name": data["name"],
+        "emoji": data["emoji"],
+        "trigger_type": data["trigger_type"],
+        "trigger_value": data.get("trigger_value"),
+        "description": data.get("description", ""),
+        "compliment": data.get("compliment", "Поздравляем!"),
+        "is_active": data.get("is_active", True)
+    }
+    
+    result = supabase.table("badges_catalog").insert(insert_data).execute()
+    return result.data[0] if result.data else None
 
 
 async def update_badge(badge_id: str, data: dict):
@@ -513,7 +434,6 @@ async def upsert_schedule(data: dict):
     if not sunday_date:
         return None
     
-    # Проверяем существование
     existing = supabase.table("sunday_schedule").select("id").eq("sunday_date", sunday_date).execute()
     
     insert_data = {
@@ -566,12 +486,10 @@ async def get_all_workouts_admin(limit: int = 50):
 
 async def delete_workout_admin(workout_id: str):
     """Удалить тренировку"""
-    # Сначала получаем данные для обновления статистики
     workout = supabase.table("workouts").select("user_id, distance_km").eq("id", workout_id).execute()
     
     if workout.data:
         w = workout.data[0]
-        # Уменьшаем статистику
         supabase.table("profiles").update({
             "total_sundays": supabase.raw("total_sundays - 1"),
             "total_km": supabase.raw(f"total_km - {w['distance_km']}")
@@ -596,19 +514,15 @@ async def delete_rating_admin(rating_id: str):
 async def get_admin_stats():
     """Получить статистику для админ-дашборда"""
     try:
-        # Общее количество участников (всех)
         users = supabase.table("profiles").select("id", count="exact").execute()
         total_users = users.count if hasattr(users, 'count') else len(users.data) if users.data else 0
         
-        # Тренировки
         workouts = supabase.table("workouts").select("id", count="exact").execute()
         total_workouts = workouts.count if hasattr(workouts, 'count') else len(workouts.data) if workouts.data else 0
         
-        # Сумма км
         km_result = supabase.table("profiles").select("total_km").execute()
         total_km = sum(p.get("total_km", 0) for p in km_result.data) if km_result.data else 0
         
-        # Топ тренеров
         top_coaches = supabase.table("coaches").select("full_name, avg_rating_pro, total_ratings").order("avg_rating_pro", desc=True).limit(3).execute()
         
         return {
@@ -621,33 +535,12 @@ async def get_admin_stats():
         print(f"Error in get_admin_stats: {e}")
         return {"total_users": 0, "total_workouts": 0, "total_km": 0, "top_coaches": []}
 
-async def create_badge(data: dict):
-    """Создать новый бейдж в каталоге"""
-    required = ["badge_type", "name", "emoji", "trigger_type"]
-    for field in required:
-        if field not in data:
-            return None
-    
-    insert_data = {
-        "badge_type": data["badge_type"],
-        "name": data["name"],
-        "emoji": data["emoji"],
-        "trigger_type": data["trigger_type"],
-        "trigger_value": data.get("trigger_value"),
-        "description": data.get("description", ""),
-        "compliment": data.get("compliment", "Поздравляем!"),
-        "is_active": data.get("is_active", True)
-    }
-    
-    result = supabase.table("badges_catalog").insert(insert_data).execute()
-    return result.data[0] if result.data else None
 
 # ========== ЕЖЕНЕДЕЛЬНЫЙ ОТЧЁТ ==========
 async def send_weekly_report():
     """Отправляет сводный отчёт в общий чат по понедельникам в 10:00"""
     from config import MAIN_CHAT_ID
     from flask_app import telegram_bot
-    from datetime import datetime, timedelta
     
     # Определяем дату прошлого воскресенья
     today = datetime.now().date()
