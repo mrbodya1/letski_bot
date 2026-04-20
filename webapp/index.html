@@ -1015,6 +1015,10 @@
                             <div class="admin-menu-emoji">⭐</div>
                             <div class="admin-menu-label">Оценки</div>
                         </div>
+                        <div class="admin-menu-item" onclick="showAdminSection('issued_prizes')">
+                            <div class="admin-menu-emoji">🎫</div>
+                            <div class="admin-menu-label">Выданные призы</div>
+                        </div>
                         <div class="admin-menu-item" onclick="showAdminSection('stats')">
                             <div class="admin-menu-emoji">📊</div>
                             <div class="admin-menu-label">Статистика</div>
@@ -1495,7 +1499,8 @@
             const titles = {
                 schedule: '📅 Расписание', coaches: '👟 Тренеры', prizes: '🎁 Призы',
                 badges: '🏅 Бейджи', users: '👥 Участники', workouts: '🏃 Тренировки',
-                ratings: '⭐ Оценки', stats: '📊 Статистика'
+                ratings: '⭐ Оценки', stats: '📊 Статистика',
+                issued_prizes: '🎫 Выданные призы'
             };
             
             content.innerHTML = `
@@ -1530,6 +1535,8 @@
                     renderRatingsTable(container, data);
                 } else if (section === 'schedule') {
                     renderScheduleTable(container, data);
+                } else if (section === 'issued_prizes') {
+                    renderIssuedPrizesTable(container, data);
                 } else {
                     container.innerHTML = `<div class="empty-state">Раздел в разработке</div>`;
                 }
@@ -1841,6 +1848,72 @@
                 </div>
             `;
         }
+
+        function renderIssuedPrizesTable(container, prizes) {
+            if (!prizes || prizes.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет выданных призов</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Участник</th>
+                            <th>Приз</th>
+                            <th>Промокод</th>
+                            <th>Статус</th>
+                            <th></th>
+                        </tr>
+            `;
+            
+            prizes.forEach(p => {
+                const userName = p.profiles?.full_name || '—';
+                const prizeName = p.prizes_pool?.name || '—';
+                const promoCode = p.promo_code || '—';
+                const isClaimed = p.is_claimed || false;
+                const awardedDate = new Date(p.awarded_at).toLocaleDateString('ru-RU');
+                
+                html += `
+                    <tr>
+                        <td>${awardedDate}</td>
+                        <td>${userName}</td>
+                        <td>${prizeName}</td>
+                        <td><code>${promoCode}</code></td>
+                        <td>${isClaimed ? '✅ Использован' : '⏳ Ожидает'}</td>
+                        <td class="admin-actions">
+                            ${!isClaimed ? 
+                                `<button class="admin-btn admin-btn-success" onclick="markPrizeAsClaimed('${p.id}')">✅</button>` : 
+                                ''
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table></div>';
+            container.innerHTML = html;
+        }
+
+        window.markPrizeAsClaimed = (userPrizeId) => {
+            if (!confirm('Отметить приз как использованный?')) return;
+            
+            fetch(`${API_BASE}/api/admin/issued_prizes/${userPrizeId}/claim`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Приз отмечен как использованный!');
+                    showAdminSection('issued_prizes');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
         
         // ========== АДМИН-ФУНКЦИИ ==========
         window.showAddCoachForm = () => {
