@@ -101,7 +101,6 @@ async def process_gender(message: types.Message, state: FSMContext):
 
 @dp.message_handler(Command("help"))
 async def cmd_help(message: types.Message):
-    # Сначала отправляем текст
     await message.answer(
         "📸 <b>Пример оформления отчёта:</b>\n\n"
         "1️⃣ Открой свой трекер (Strava, Garmin, Nike Run Club и т.д.)\n"
@@ -111,10 +110,8 @@ async def cmd_help(message: types.Message):
         parse_mode="HTML"
     )
     
-    # Затем отправляем фото-пример
-    # Нужно будет заменить FILE_ID на реальный после загрузки фото в бота
     await message.answer_photo(
-        photo="FILE_ID_ПРИМЕРА",
+        photo="AgACAgIAAxkBAAPUaeZeIZuttQ-RrCW92HhBWxtRr4kAAvsUaxtqozlLxAf-lwXhkF8BAAMCAAN3AAM7BA",
         caption="#km20 #min132"
     )
 
