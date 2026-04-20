@@ -245,9 +245,10 @@ async def cmd_clear_cache(message: types.Message):
 
 @dp.message_handler(Command("file_id"))
 async def cmd_get_file_id(message: types.Message):
+    """Временная команда для получения file_id фото"""
     if not message.reply_to_message or not message.reply_to_message.photo:
         await message.reply("❌ Ответь на сообщение с фото, для которого нужно получить file_id")
         return
     
     file_id = message.reply_to_message.photo[-1].file_id
-    await message.reply(f"📸 FILE_ID:\n\n`{file_id}`", parse_mode="Markdown")
+    await message.reply(f"📸 FILE_ID:\n\n{file_id}")
