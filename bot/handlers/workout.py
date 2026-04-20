@@ -8,13 +8,13 @@ from flask_app import dp, telegram_bot
 from config import MAIN_CHAT_ID, ADMIN_IDS
 from bot.utils.supabase import (
     get_profile, get_sunday_schedule, create_workout,
-    update_workout_repost, get_all_coaches,
+    get_all_coaches,
     create_sunday_schedule as create_schedule,
     supabase, check_and_award_badges,
     award_prize_with_promo, get_issued_prizes_count_for_workout
 )
 from bot.keyboards.inline import get_rating_keyboard
-from bot.utils.helpers import calculate_pace, format_pace
+from bot.utils.helpers import calculate_pace, format_pace, is_sunday
 
 
 # Кэш для защиты от повторной обработки сообщений
@@ -60,6 +60,7 @@ async def handle_workout_photo(message: types.Message):
         processed_messages.clear()
     
     user_id = message.from_user.id
+    user_is_admin = is_admin(user_id)
     
     # Получаем профиль
     profile = await get_profile(user_id)
@@ -85,6 +86,19 @@ async def handle_workout_photo(message: types.Message):
     
     today = date.today().isoformat()
     
+    # ========== ПРОВЕРКИ ДЛЯ ОБЫЧНЫХ ПОЛЬЗОВАТЕЛЕЙ ==========
+    if not user_is_admin:
+        # Проверка на воскресенье
+        if not is_sunday():
+            await message.reply("❌ Отчеты принимаются только по воскресеньям!")
+            return
+        
+        # Проверка на повторную тренировку
+        existing = await get_user_workout_for_sunday(profile["id"], today)
+        if existing:
+            await message.reply("❌ Ты уже отправлял отчет за сегодня!")
+            return
+    
     # Получаем или создаём расписание
     schedule = await get_sunday_schedule(today)
     if not schedule:
@@ -98,7 +112,7 @@ async def handle_workout_photo(message: types.Message):
         await message.reply("❌ Нет тренера. Добавь тренера через админку.")
         return
     
-        # Сохраняем тренировку (триггеры БД обновят статистику)
+    # Сохраняем тренировку (триггеры БД обновят статистику)
     workout = await create_workout(
         user_id=profile["id"],
         coach_id=schedule["coach_id"],
@@ -118,15 +132,14 @@ async def handle_workout_photo(message: types.Message):
     total_km = updated_profile.get("total_km", 0) or 0
     total_sundays = updated_profile.get("total_sundays", 0) or 0
     
-    # Публикуем в общий чат (только факт тренировки)
     coach_name = schedule.get("coaches", {}).get("full_name", "Неизвестный тренер")
     pace = calculate_pace(parsed["km"], parsed["min"])
     
-    is_test = is_admin(user_id)
-    test_prefix = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА</b>\n\n" if is_test else ""
+    # ========== ОТПРАВКА В ОБЩИЙ ЧАТ ОТКЛЮЧЕНА ==========
+    # Оставляем только еженедельный отчёт по понедельникам
     
     # Ответ пользователю (в личку)
-    if is_test:
+    if user_is_admin:
         title = "🧪 <b>ТЕСТОВАЯ ТРЕНИРОВКА ЗАПИСАНА!</b>"
     else:
         title = "✅ <b>ТРЕНИРОВКА ЗАПИСАНА!</b>"
@@ -140,7 +153,7 @@ async def handle_workout_photo(message: types.Message):
         f"📏 Всего км: {total_km}\n"
     )
     
-    # ========== ПРОВЕРКА БЕЙДЖЕЙ (только личные уведомления) ==========
+    # ========== ПРОВЕРКА БЕЙДЖЕЙ ==========
     stats = {
         'total_workouts': total_sundays,
         'total_km': total_km,
@@ -152,9 +165,8 @@ async def handle_workout_photo(message: types.Message):
     for badge in awarded_badges:
         response_text += f"\n🏅 <b>НОВЫЙ БЕЙДЖ!</b>\n{badge['emoji']} {badge['name']}\n"
     
-    # ========== ВЫДАЧА ПРИЗОВ (сохраняем в БД, но не показываем в личке) ==========
+    # ========== ВЫДАЧА ПРИЗОВ ==========
     all_prizes = supabase.table("prizes_pool").select("*").eq("is_active", True).execute()
-    prize_was_awarded = False
     
     if all_prizes.data:
         available_prizes = []
@@ -185,8 +197,6 @@ async def handle_workout_photo(message: types.Message):
             )
             
             if result:
-                prize_was_awarded = True
-                # Не показываем приз в личке — только сообщение, что нужно зайти в кабинет
                 response_text += (
                     f"\n🎁 <b>Ты получил новый приз!</b>\n"
                     f"Загляни в личный кабинет, чтобы открыть его 🎰\n"
