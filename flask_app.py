@@ -557,6 +557,20 @@ def api_admin_stats():
     
     return asyncio.run(get_data())
 
+@app.route('/api/admin/schedule/<schedule_id>', methods=['PATCH'])
+def api_admin_update_schedule(schedule_id):
+    if not _is_admin_request(request):
+        return {"error": "Unauthorized"}, 403
+    
+    data = request.get_json()
+    
+    async def update():
+        from bot.utils.supabase import update_schedule_admin
+        return await update_schedule_admin(schedule_id, data)
+    
+    result = asyncio.run(update())
+    return result if result else {"error": "Failed to update"}, 500
+
 
 # ========== ПЛАНИРОВЩИК ЕЖЕНЕДЕЛЬНОГО ОТЧЁТА ==========
 def run_scheduler():
