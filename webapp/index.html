@@ -1552,20 +1552,29 @@
             }
             
             let html = `
+                <div style="margin-bottom: 16px;">
+                    <button class="btn-primary" onclick="showAddScheduleForm()">+ Добавить расписание</button>
+                </div>
                 <div class="admin-table-container">
                     <table class="admin-table">
-                        <tr><th>Дата</th><th>Тренер</th><th>Формат</th><th>Статус</th></tr>
+                        <tr><th>Дата</th><th>Тренер</th><th>Формат</th><th>Локация</th><th>Время</th><th></th></tr>
             `;
             
             schedule.forEach(s => {
                 const coachName = s.coaches?.full_name || '—';
+                const time = s.start_time ? s.start_time.substring(0, 5) : '—';
                 
                 html += `
                     <tr>
                         <td>${s.sunday_date}</td>
                         <td>${coachName}</td>
                         <td>${s.format || '—'}</td>
-                        <td>${s.status || 'scheduled'}</td>
+                        <td>${s.location || '—'}</td>
+                        <td>${time}</td>
+                        <td class="admin-actions">
+                            <button class="admin-btn" onclick="editSchedule('${s.id}')">✏️</button>
+                            <button class="admin-btn admin-btn-danger" onclick="deleteSchedule('${s.id}')">🗑️</button>
+                        </td>
                     </tr>
                 `;
             });
@@ -1573,6 +1582,176 @@
             html += '</table></div>';
             container.innerHTML = html;
         }
+
+        window.showAddScheduleForm = () => {
+            // Получаем список тренеров для выпадающего списка
+            fetch(`${API_BASE}/api/admin/coaches?user_id=${userId}`)
+            .then(r => r.json())
+            .then(coaches => {
+                const coachesOptions = coaches.map(c => 
+                    `<option value="${c.id}">${c.full_name}</option>`
+                ).join('');
+                
+                const formHtml = `
+                    <div class="admin-modal" onclick="this.remove()">
+                        <div class="admin-modal-content" onclick="event.stopPropagation()">
+                            <h3>Добавить расписание</h3>
+                            
+                            <label>Дата</label>
+                            <input type="date" id="schedule-date" required>
+                            
+                            <label>Тренер</label>
+                            <select id="schedule-coach">
+                                <option value="">— Выбери тренера —</option>
+                                ${coachesOptions}
+                            </select>
+                            
+                            <label>Формат тренировки</label>
+                            <input type="text" id="schedule-format" placeholder="Длительный кросс, Интервалы...">
+                            
+                            <label>Локация</label>
+                            <input type="text" id="schedule-location" placeholder="Парк Горького, Манеж...">
+                            
+                            <label>Время начала</label>
+                            <input type="time" id="schedule-time" value="09:00">
+                            
+                            <label>Описание</label>
+                            <textarea id="schedule-description" placeholder="Дополнительная информация..." rows="2"></textarea>
+                            
+                            <label>Статус</label>
+                            <select id="schedule-status">
+                                <option value="scheduled">Запланирована</option>
+                                <option value="completed">Завершена</option>
+                                <option value="cancelled">Отменена</option>
+                            </select>
+                            
+                            <div class="admin-modal-buttons">
+                                <button class="btn-primary" onclick="submitScheduleForm()">Добавить</button>
+                                <button class="btn-secondary" onclick="this.closest('.admin-modal').remove()">Отмена</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', formHtml);
+            });
+        };
+        
+        window.editSchedule = (id) => {
+            // Получаем данные расписания и тренеров
+            Promise.all([
+                fetch(`${API_BASE}/api/admin/schedule?user_id=${userId}`).then(r => r.json()),
+                fetch(`${API_BASE}/api/admin/coaches?user_id=${userId}`).then(r => r.json())
+            ]).then(([schedule, coaches]) => {
+                const item = schedule.find(s => s.id === id);
+                if (!item) {
+                    alert('Расписание не найдено');
+                    return;
+                }
+                
+                const coachesOptions = coaches.map(c => 
+                    `<option value="${c.id}" ${c.id === item.coach_id ? 'selected' : ''}>${c.full_name}</option>`
+                ).join('');
+                
+                const formHtml = `
+                    <div class="admin-modal" onclick="this.remove()">
+                        <div class="admin-modal-content" onclick="event.stopPropagation()">
+                            <h3>Редактировать расписание</h3>
+                            
+                            <label>Дата</label>
+                            <input type="date" id="schedule-date" value="${item.sunday_date}" required>
+                            
+                            <label>Тренер</label>
+                            <select id="schedule-coach">
+                                <option value="">— Выбери тренера —</option>
+                                ${coachesOptions}
+                            </select>
+                            
+                            <label>Формат тренировки</label>
+                            <input type="text" id="schedule-format" value="${item.format || ''}" placeholder="Длительный кросс, Интервалы...">
+                            
+                            <label>Локация</label>
+                            <input type="text" id="schedule-location" value="${item.location || ''}" placeholder="Парк Горького, Манеж...">
+                            
+                            <label>Время начала</label>
+                            <input type="time" id="schedule-time" value="${item.start_time || '09:00'}">
+                            
+                            <label>Описание</label>
+                            <textarea id="schedule-description" placeholder="Дополнительная информация..." rows="2">${item.description || ''}</textarea>
+                            
+                            <label>Статус</label>
+                            <select id="schedule-status">
+                                <option value="scheduled" ${item.status === 'scheduled' ? 'selected' : ''}>Запланирована</option>
+                                <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>Завершена</option>
+                                <option value="cancelled" ${item.status === 'cancelled' ? 'selected' : ''}>Отменена</option>
+                            </select>
+                            
+                            <div class="admin-modal-buttons">
+                                <button class="btn-primary" onclick="submitScheduleForm('${id}')">Сохранить</button>
+                                <button class="btn-secondary" onclick="this.closest('.admin-modal').remove()">Отмена</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', formHtml);
+            });
+        };
+
+        window.submitScheduleForm = (id = null) => {
+            const data = {
+                sunday_date: document.getElementById('schedule-date')?.value,
+                coach_id: document.getElementById('schedule-coach')?.value || null,
+                format: document.getElementById('schedule-format')?.value || null,
+                location: document.getElementById('schedule-location')?.value || null,
+                start_time: document.getElementById('schedule-time')?.value || null,
+                description: document.getElementById('schedule-description')?.value || null,
+                status: document.getElementById('schedule-status')?.value || 'scheduled'
+            };
+            
+            if (!data.sunday_date) {
+                alert('Дата обязательна!');
+                return;
+            }
+            
+            const url = id 
+                ? `${API_BASE}/api/admin/schedule/${id}?user_id=${userId}`
+                : `${API_BASE}/api/admin/schedule?user_id=${userId}`;
+            const method = id ? 'PATCH' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.id || data.success) {
+                    document.querySelector('.admin-modal').remove();
+                    alert(id ? 'Расписание обновлено!' : 'Расписание добавлено!');
+                    showAdminSection('schedule');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестная ошибка'));
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
+
+        window.deleteSchedule = (id) => {
+            if (!confirm('Удалить расписание?')) return;
+            
+            fetch(`${API_BASE}/api/admin/schedule/${id}?user_id=${userId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Расписание удалено!');
+                    showAdminSection('schedule');
+                } else {
+                    alert('Ошибка удаления');
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e.message));
+        };
 
         function renderWorkoutsTable(container, workouts) {
             if (!workouts || workouts.length === 0) {
