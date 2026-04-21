@@ -459,6 +459,17 @@ async def delete_schedule(schedule_id: str):
     result = supabase.table("sunday_schedule").delete().eq("id", schedule_id).execute()
     return True if result.data else False
 
+async def update_schedule_admin(schedule_id: str, data: dict):
+    """Обновить расписание по ID"""
+    allowed = ["sunday_date", "coach_id", "format", "location", "start_time", "description", "status"]
+    update_data = {k: v for k, v in data.items() if k in allowed and v is not None}
+    
+    if not update_data:
+        return None
+    
+    result = supabase.table("sunday_schedule").update(update_data).eq("id", schedule_id).execute()
+    return result.data[0] if result.data else None
+
 
 async def get_all_users_admin():
     """Получить всех участников"""
