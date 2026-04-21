@@ -1170,8 +1170,12 @@
                 
                 const prizesList = document.getElementById('prizes-list');
                 const myPrizes = data.prizes || [];
-                if (myPrizes.length > 0) {
-                    prizesList.innerHTML = myPrizes.map(p => {
+                // Фильтруем только НЕ использованные призы
+                const activePrizes = myPrizes.filter(p => !p.is_claimed);
+                const usedPrizesCount = myPrizes.filter(p => p.is_claimed).length;
+                
+                if (activePrizes.length > 0) {
+                    prizesList.innerHTML = activePrizes.map(p => {
                         const prize = p.prizes_pool || {};
                         const isRevealed = p.is_revealed || false;
                         
@@ -1201,13 +1205,25 @@
                                             🎫 ${promoCode}
                                         </p>
                                     </div>
-                                    <span class="prize-status claimed">Получен</span>
                                     ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
                                 </div>
                             `;
                         }
                     }).join('');
+                    
+                    // Показываем общее количество призов (активные + использованные)
                     document.getElementById('prizes-count').textContent = myPrizes.length;
+                    
+                    // Если есть использованные, добавляем ссылку на вкладку Призы
+                    if (usedPrizesCount > 0) {
+                        prizesList.innerHTML += `
+                            <div style="margin-top: 12px; text-align: center;">
+                                <span style="font-size: 13px; color: #666;">
+                                    📦 +${usedPrizesCount} использованных приза
+                                </span>
+                            </div>
+                        `;
+                    }
                 } else {
                     prizesList.innerHTML = '<div class="empty-state">Пока нет призов</div>';
                     document.getElementById('prizes-count').textContent = '0';
@@ -1364,11 +1380,40 @@
                 }
                 
                 if (data.my && data.my.length > 0) {
-                    myContainer.innerHTML = data.my.map(p => {
+                    // Сортируем: сначала неиспользованные и неоткрытые, потом открытые, потом использованные
+                    const sortedPrizes = [...data.my].sort((a, b) => {
+                        if (a.is_claimed !== b.is_claimed) return a.is_claimed ? 1 : -1;
+                        if (a.is_revealed !== b.is_revealed) return a.is_revealed ? 1 : -1;
+                        return 0;
+                    });
+                    
+                    myContainer.innerHTML = sortedPrizes.map(p => {
                         const prize = p.prizes_pool || {};
                         const isRevealed = p.is_revealed || false;
+                        const isClaimed = p.is_claimed || false;
                         
-                        if (!isRevealed) {
+                        if (isClaimed) {
+                            // Использованный приз — показываем, но с пометкой
+                            const linkUrl = prize.link_url || '#';
+                            const hasLink = linkUrl && linkUrl !== '#';
+                            const promoCode = p.promo_code || '—';
+                            
+                            return `
+                                <div class="prize-item" style="opacity: 0.7;" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
+                                    <span class="prize-emoji">✅</span>
+                                    <div class="prize-info">
+                                        <h4>${prize.name || 'Приз'}</h4>
+                                        <p>${prize.partner || ''}</p>
+                                        <p style="margin-top: 4px; font-size: 11px; color: #888;">
+                                            🎫 ${promoCode}
+                                        </p>
+                                    </div>
+                                    <span class="prize-status claimed">Использован</span>
+                                    ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
+                                </div>
+                            `;
+                        } else if (!isRevealed) {
+                            // Неоткрытый приз
                             return `
                                 <div class="prize-item unrevealed" onclick="revealPrize('${p.id}')">
                                     <span class="prize-emoji">🎁</span>
@@ -1380,13 +1425,14 @@
                                 </div>
                             `;
                         } else {
+                            // Открытый, но не использованный приз
                             const linkUrl = prize.link_url || '#';
                             const hasLink = linkUrl && linkUrl !== '#';
                             const promoCode = p.promo_code || '—';
                             
                             return `
                                 <div class="prize-item" ${hasLink ? `onclick="window.open('${linkUrl}', '_blank')"` : ''}>
-                                    <span class="prize-emoji">✅</span>
+                                    <span class="prize-emoji">🎁</span>
                                     <div class="prize-info">
                                         <h4>${prize.name || 'Приз'}</h4>
                                         <p>${prize.partner || ''}</p>
@@ -1394,7 +1440,6 @@
                                             🎫 ${promoCode}
                                         </p>
                                     </div>
-                                    <span class="prize-status claimed">Получен</span>
                                     ${hasLink ? '<span class="prize-arrow">→</span>' : ''}
                                 </div>
                             `;
