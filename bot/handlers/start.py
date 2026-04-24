@@ -12,6 +12,10 @@ class RegistrationState(StatesGroup):
     waiting_for_full_name = State()
     waiting_for_gender = State()
 
+@dp.message_handler(lambda message: message.chat.type != 'private')
+async def ignore_group_messages(message: types.Message):
+    """Игнорируем все сообщения из групп и супергрупп"""
+    pass
 
 # ========== КОМАНДА /start ==========
 @dp.message_handler(Command("start"))
