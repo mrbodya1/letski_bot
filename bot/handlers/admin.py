@@ -223,6 +223,22 @@ async def cmd_top10(message: types.Message):
     
     await message.answer(text, parse_mode="HTML")
 
+@dp.message_handler(Command("weekly_report"))
+async def cmd_weekly_report(message: types.Message):
+    """Принудительно отправить еженедельный отчёт (только для админа)"""
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ У тебя нет доступа к этой команде")
+        return
+    
+    await message.answer("📤 Формирую отчёт...")
+    
+    try:
+        from bot.utils.supabase import send_weekly_report
+        await send_weekly_report()
+        await message.answer("✅ Отчёт отправлен в общий чат!")
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при отправке отчёта:\n{e}")
+
 
 @dp.callback_query_handler(lambda c: c.data == "admin_cancel")
 async def admin_cancel(callback: types.CallbackQuery):
