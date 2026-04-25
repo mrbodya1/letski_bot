@@ -14,6 +14,11 @@ temp_ratings = {}
 
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_start:"))
 async def start_rating(callback: types.CallbackQuery):
+    """Начало оценки тренера"""
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     workout_id = callback.data.split(":")[1]
     
     has_rating = await has_rating_for_workout(workout_id)
@@ -42,6 +47,10 @@ async def start_rating(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_pro:"))
 async def rate_pro(callback: types.CallbackQuery):
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     _, workout_id, value = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -63,6 +72,10 @@ async def rate_pro(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_presentation:"))
 async def rate_presentation(callback: types.CallbackQuery):
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     _, workout_id, value = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -84,6 +97,10 @@ async def rate_presentation(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_friendly:"))
 async def rate_friendly(callback: types.CallbackQuery):
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     _, workout_id, value = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -109,6 +126,10 @@ async def rate_friendly(callback: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_back:"))
 async def rate_back(callback: types.CallbackQuery):
     """Возврат к предыдущему шагу оценки"""
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     _, workout_id, target_category = callback.data.split(":")
     user_id = callback.from_user.id
     
@@ -143,6 +164,10 @@ async def rate_back(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith("rate_confirm:"))
 async def confirm_rating(callback: types.CallbackQuery):
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     workout_id = callback.data.split(":")[1]
     user_id = callback.from_user.id
     
@@ -205,6 +230,10 @@ async def confirm_rating(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == "rate_cancel")
 async def cancel_rating(callback: types.CallbackQuery):
+    if callback.message.chat.type != 'private':
+        await callback.answer("Оценка доступна только в личных сообщениях", show_alert=True)
+        return
+    
     user_id = callback.from_user.id
     if user_id in temp_ratings:
         del temp_ratings[user_id]
