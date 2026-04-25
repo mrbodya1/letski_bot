@@ -599,6 +599,14 @@ def run_scheduler():
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
+from aiogram import types
+from aiogram.dispatcher.filters import ChatTypeFilter
+
+@dp.message_handler(ChatTypeFilter(chat_type=['group', 'supergroup']))
+async def ignore_all_group_messages(message: types.Message):
+    """Игнорируем абсолютно все сообщения из групп"""
+    pass
+
 
 # ========== ИМПОРТ ХЕНДЛЕРОВ ==========
 import bot.handlers.start
