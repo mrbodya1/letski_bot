@@ -48,6 +48,10 @@ def parse_workout_caption(caption: str) -> dict:
 
 @dp.message_handler(content_types=['photo'])
 async def handle_workout_photo(message: types.Message):
+    # Игнорируем фото из групп и супергрупп
+    if message.chat.type != 'private':
+        return
+    
     # ========== ЗАЩИТА ОТ ПОВТОРНОЙ ОБРАБОТКИ ==========
     msg_id = f"{message.chat.id}:{message.message_id}"
     if msg_id in processed_messages:
