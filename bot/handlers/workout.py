@@ -217,6 +217,9 @@ async def handle_workout_photo(message: types.Message):
 
 @dp.message_handler(Command("check_sunday"))
 async def cmd_check_sunday(message: types.Message):
+    if message.chat.type != 'private':
+        return
+    
     if is_admin(message.from_user.id):
         await message.answer("👑 Админский режим: можно отправлять тренировки в любой день!")
     else:
@@ -225,7 +228,9 @@ async def cmd_check_sunday(message: types.Message):
 
 @dp.message_handler(Command("clear_cache"))
 async def cmd_clear_cache(message: types.Message):
-    """Очистить кэш обработанных сообщений (для админа)"""
+    if message.chat.type != 'private':
+        return
+    
     if not is_admin(message.from_user.id):
         await message.answer("❌ Нет доступа")
         return
@@ -236,7 +241,9 @@ async def cmd_clear_cache(message: types.Message):
 
 @dp.message_handler(Command("file_id"))
 async def cmd_get_file_id(message: types.Message):
-    """Временная команда для получения file_id фото"""
+    if message.chat.type != 'private':
+        return
+    
     if not message.reply_to_message or not message.reply_to_message.photo:
         await message.reply("❌ Ответь на сообщение с фото, для которого нужно получить file_id")
         return
