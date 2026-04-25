@@ -12,14 +12,20 @@ class RegistrationState(StatesGroup):
     waiting_for_full_name = State()
     waiting_for_gender = State()
 
+
+# ========== ФИЛЬТР: ИГНОРИРУЕМ ГРУППЫ ==========
 @dp.message_handler(lambda message: message.chat.type != 'private')
 async def ignore_group_messages(message: types.Message):
     """Игнорируем все сообщения из групп и супергрупп"""
     pass
 
+
 # ========== КОМАНДА /start ==========
 @dp.message_handler(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
+    if message.chat.type != 'private':
+        return
+    
     user_id = message.from_user.id
     username = message.from_user.username
     
@@ -48,6 +54,9 @@ async def cmd_start(message: types.Message, state: FSMContext):
 # ========== РЕГИСТРАЦИЯ: ИМЯ ==========
 @dp.message_handler(state=RegistrationState.waiting_for_full_name)
 async def process_full_name(message: types.Message, state: FSMContext):
+    if message.chat.type != 'private':
+        return
+    
     full_name = message.text.strip()
     
     if len(full_name.split()) < 2:
@@ -65,6 +74,9 @@ async def process_full_name(message: types.Message, state: FSMContext):
 # ========== РЕГИСТРАЦИЯ: ПОЛ ==========
 @dp.message_handler(state=RegistrationState.waiting_for_gender)
 async def process_gender(message: types.Message, state: FSMContext):
+    if message.chat.type != 'private':
+        return
+    
     gender_text = message.text.strip()
     
     if gender_text not in ["👨 Мужской", "👩 Женский"]:
@@ -103,6 +115,9 @@ async def process_gender(message: types.Message, state: FSMContext):
 # ========== КОМАНДА /help ==========
 @dp.message_handler(Command("help"))
 async def cmd_help(message: types.Message):
+    if message.chat.type != 'private':
+        return
+    
     await message.answer(
         "📸 <b>Пример оформления отчёта:</b>\n\n"
         "1️⃣ Открой свой трекер (Strava, Garmin, Nike Run Club и т.д.)\n"
@@ -121,12 +136,17 @@ async def cmd_help(message: types.Message):
 # ========== КНОПКА "ℹ️ Помощь" ==========
 @dp.message_handler(lambda message: message.text == "ℹ️ Помощь")
 async def button_help(message: types.Message):
+    if message.chat.type != 'private':
+        return
     await cmd_help(message)
 
 
 # ========== КОМАНДА /profile ==========
 @dp.message_handler(Command("profile"))
 async def cmd_profile(message: types.Message):
+    if message.chat.type != 'private':
+        return
+    
     user_id = message.from_user.id
     profile = await get_profile(user_id)
     
@@ -149,12 +169,16 @@ async def cmd_profile(message: types.Message):
 # ========== КНОПКА "📊 Мой профиль" ==========
 @dp.message_handler(lambda message: message.text == "📊 Мой профиль")
 async def button_profile(message: types.Message):
+    if message.chat.type != 'private':
+        return
     await cmd_profile(message)
 
 
-# ========== КНОПКА "📱 Открыть приложение" (оставлена для совместимости) ==========
+# ========== КНОПКА "📱 Открыть приложение" ==========
 @dp.message_handler(lambda message: message.text == "📱 Открыть приложение")
 async def button_app(message: types.Message):
+    if message.chat.type != 'private':
+        return
     await message.answer(
         "📱 Нажми кнопку «Открыть Letski» в меню бота (рядом с полем ввода).\n\n"
         "Если кнопки нет — напиши /start для обновления меню."
