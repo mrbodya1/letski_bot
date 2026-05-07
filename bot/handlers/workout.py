@@ -48,7 +48,7 @@ def parse_workout_caption(caption: str) -> dict:
 
 @dp.message_handler(content_types=['photo'])
 async def handle_workout_photo(message: types.Message):
-    # Игнорируем фото из групп и супергрупп
+    # Игнорируем фото из групп (НЕ из личных сообщений!)
     if message.chat.type != 'private':
         return
     
