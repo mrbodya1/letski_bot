@@ -8,6 +8,7 @@ from flask_app import dp, telegram_bot
 from config import MAIN_CHAT_ID, ADMIN_IDS
 from bot.utils.supabase import (
     get_profile, get_sunday_schedule, create_workout,
+    get_user_workout_for_sunday,
     get_all_coaches,
     create_sunday_schedule as create_schedule,
     supabase, check_and_award_badges,
