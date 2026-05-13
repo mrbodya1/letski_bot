@@ -631,10 +631,14 @@ async def send_weekly_report():
     
     # 6. Полученные бейджи за воскресенье
     badges = supabase.table("badges")\
-        .select("*, profiles(full_name), badges_catalog(name, emoji)")\
+        .select("*, profiles(full_name)")\
         .gte("awarded_at", last_sunday_str)\
         .lt("awarded_at", (last_sunday + timedelta(days=1)).isoformat())\
         .execute()
+    
+    # Получаем каталог бейджей отдельно
+    badges_catalog = supabase.table("badges_catalog").select("badge_type, name, emoji").execute()
+    catalog_dict = {b['badge_type']: b for b in badges_catalog.data} if badges_catalog.data else {}
     
     # Формируем сообщение
     report = f"📊 <b>ЕЖЕНЕДЕЛЬНЫЙ ОТЧЁТ</b>\n"
@@ -681,7 +685,7 @@ async def send_weekly_report():
     if badges.data:
         report += "🏅 <b>НОВЫЕ БЕЙДЖИ</b>\n"
         for b in badges.data:
-            badge_info = b.get('badges_catalog', {})
+            badge_info = catalog_dict.get(b['badge_type'], {})
             emoji = badge_info.get('emoji', '🏅')
             name = badge_info.get('name', b['badge_type'])
             report += f"• {b['profiles']['full_name']} — {emoji} {name}\n"
