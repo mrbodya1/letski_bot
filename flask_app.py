@@ -582,7 +582,7 @@ def run_scheduler():
         now = datetime.now()
         today_str = now.date().isoformat()
         
-        if now.weekday() == 0 and now.hour == 10 and now.minute == 0:
+        if now.weekday() == 0 and now.hour == 5 and now.minute == 0:
             if last_report_date != today_str:
                 print(f"📤 Отправляю еженедельный отчёт за {today_str}...")
                 try:
